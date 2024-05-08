@@ -8,6 +8,8 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
 pyfs = {git = "https://github.com/NicholasSynovic/python-fs-utils"}
+click = "^8.1.7"
+progress = "^1.6"
 
 
 [build-system]
