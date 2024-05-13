@@ -1,8 +1,9 @@
-import pickle
 from pathlib import Path
 from typing import List
 
+import click
 from pandas import DataFrame
+from pyfs import isFile, resolvePath
 from sqlalchemy import Connection
 
 from src.json import createJSON
@@ -11,29 +12,42 @@ from src.sqlite import createDBConnection, saveData
 from src.sqlite.works import Works
 
 
-def main() -> None:
-    jlPath: Path = Path("../../data/json/part_000")
-    dbPath: Path = Path("works_" + jlPath.name + ".db")
+def insertWorks(df: DataFrame, dbConn: Connection) -> None:
+    pass
 
-    dbConn: Connection = createDBConnection(dbPath=dbPath)
-    works: Works = Works(dbConn=dbConn)
 
-    # strData: List[str] = readFile(jlFilePath=jlPath)
-    # jsonData: List[dict] = createJSON(data=strData)
+@click.command()
+@click.option(
+    "-i",
+    "--input",
+    "inputFP",
+    type=Path,
+    required=True,
+    help="Path to OpenAlex JSON Lines file",
+)
+@click.option(
+    "-o",
+    "--output",
+    "outputFP",
+    type=Path,
+    required=True,
+    help="Path to SQLite3 file",
+)
+def main(inputFP: Path, outputFP: Path) -> None:
+    absInputFP: Path = resolvePath(path=inputFP)
+    assert absInputFP
 
-    # with open("jd.pickle", "wb") as pf:
-    #     pickle.dump(jsonData, pf)
-    #     pf.close()
+    absOutputFP: Path = resolvePath(path=outputFP)
 
-    with open("jd.pickle", "rb") as pf:
-        jsonData: List[dict] = pickle.load(pf)
-        pf.close()
+    dbConn: Connection = createDBConnection(dbPath=absOutputFP)
+    works: Works = Works(dbConn=dbConn)  # TODO: Make this a generic SQLite obj
+
+    strData: List[str] = readFile(jlFilePath=absInputFP)
+    jsonData: List[dict] = createJSON(data=strData)
 
     df: DataFrame = buildDataFrame(data=jsonData)
     df.drop(columns="cites", inplace=True)
     df.drop(columns="venue_oa_id", inplace=True)
-
-    print(df.columns)
 
     saveData(df=df, table="works", dbConn=dbConn)
 

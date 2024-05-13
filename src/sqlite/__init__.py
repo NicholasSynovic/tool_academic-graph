@@ -5,8 +5,7 @@ from sqlalchemy import Connection, create_engine
 
 
 def createDBConnection(dbPath: Path) -> Connection:
-    # return create_engine(url=f"sqlite:///{dbPath}").connect()
-    return create_engine(url=f"sqlite:///{dbPath}")
+    return create_engine(url=f"sqlite:///{dbPath}").connect()
 
 
 def saveData(df: DataFrame, table: str, dbConn: Connection) -> None:
