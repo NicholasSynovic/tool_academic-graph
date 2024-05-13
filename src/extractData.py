@@ -5,7 +5,7 @@ from os import listdir
 from typing import List, Iterable 
 from json import loads as jsonLoad
 from progress.bar import Bar
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 
 def readJSONLines(f: Path)   -> List[dict]: 
     with open(file=f, mode="r") as jsonFile:
@@ -17,7 +17,7 @@ def readJSONLines(f: Path)   -> List[dict]:
             data: dict = jsonLoad(s=line)
             bar.next()
             return data
-        with ThreadPoolExecutor() as executor:
+        with ProcessPoolExecutor() as executor:
             results: Iterable[dict] = executor.map(_read, lines)
     
     return list(results)
