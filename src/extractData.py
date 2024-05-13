@@ -1,3 +1,4 @@
+import pickle
 from json import JSONDecodeError, loads
 from pathlib import Path
 from subprocess import DEVNULL, PIPE, CompletedProcess, run
@@ -44,6 +45,17 @@ def createJSON(data: List[str]) -> List[dict]:
     return jsonObjects
 
 
+def buildDataFrame(data: List[dict]) -> DataFrame:
+    df: DataFrame = DataFrame(data=data)
+
+    with open("df.pickle", "wb") as pf:
+        pickle.dump(obj=df, file=pf)
+        pf.close()
+
+    df["doi"] = df["doi"].str.replace("https://doi.org/", "")
+    return df
+
+
 @click.command()
 @click.option(
     "-i",
@@ -60,6 +72,8 @@ def main(inputJSONLinesFilePath: Path) -> None:
 
     strData: List[str] = readFile(jlFilePath=absJSONLinesFilePath)
     jsonData: List[dict] = createJSON(data=strData)
+    df: DataFrame = buildDataFrame(data=jsonData)
+    print(df)
 
 
 if __name__ == "__main__":
