@@ -8,7 +8,7 @@ from sqlalchemy import Connection
 from src.json import createJSON
 from src.json.works import buildDataFrame, readFile
 from src.sqlite import createDBConnection, saveData
-from src.sqlite.works import createSchema
+from src.sqlite.works import Works
 
 
 def main() -> None:
@@ -16,7 +16,7 @@ def main() -> None:
     dbPath: Path = Path("works_" + jlPath.name + ".db")
 
     dbConn: Connection = createDBConnection(dbPath=dbPath)
-    createSchema(dbConn=dbConn)
+    works: Works = Works(dbConn=dbConn)
 
     # strData: List[str] = readFile(jlFilePath=jlPath)
     # jsonData: List[dict] = createJSON(data=strData)
