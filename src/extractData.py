@@ -22,7 +22,7 @@ def readFile(jlFilePath: Path) -> List[str]:
         stderr=DEVNULL,
         stdout=PIPE,
     )
-    outputString: str = process.stdout.decode()
+    outputString: str = process.stdout.decode().strip()
     print(f"Extracted data from {jlFilePath}")
     return outputString.split(sep="\n")
 
@@ -63,7 +63,7 @@ def buildDataFrame(data: List[dict]) -> DataFrame:
     "inputJSONLinesFilePath",
     type=Path,
     required=True,
-    help="Path to JSON Lines file from OpenAlex",
+    help="Path to JSON Lines Works file from OpenAlex",
 )
 def main(inputJSONLinesFilePath: Path) -> None:
     absJSONLinesFilePath: Path = resolvePath(path=inputJSONLinesFilePath)
