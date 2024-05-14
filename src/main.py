@@ -9,7 +9,7 @@ from sqlalchemy import Connection
 from src.json.utils import createJSON
 from src.json.works import buildDataFrame, readFile
 from src.sqlite import createDBConnection, saveData
-from src.sqlite.works import Works
+from src.sqlite.db import DB
 
 
 def insertWorks(df: DataFrame, dbConn: Connection) -> None:
@@ -46,7 +46,8 @@ def main(inputFP: Path, outputFP: Path) -> None:
     absOutputFP: Path = resolvePath(path=outputFP)
 
     dbConn: Connection = createDBConnection(dbPath=absOutputFP)
-    works: Works = Works(dbConn=dbConn)  # TODO: Make this a generic SQLite obj
+    db: DB = DB(dbConn=dbConn)  # TODO: Make this a generic SQLite obj
+    db.createTables()
 
     strData: List[str] = readFile(jlFilePath=absInputFP)
     jsonData: List[dict] = createJSON(data=strData)
