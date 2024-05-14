@@ -6,15 +6,14 @@ from pandas import DataFrame
 from pyfs import isFile, resolvePath
 from sqlalchemy import Engine
 
-from oag.json_lines.utils import createJSON
-from oag.json_lines.works import buildDataFrame, readFile
+from oag import WORKS_JQ_FORMAT
+from oag.json_lines.json_lines import JSONLines
 from oag.sqlite import createDBConnection, saveData
 from oag.sqlite.db import DB
 
 
 def insertWorks(df: DataFrame, dbConn: Engine) -> None:
-    foo: DataFrame = df.drop(columns=["cites", "venue_oa_id"])
-    saveData(df=foo, table="works", dbConn=dbConn)
+    saveData(df=df, table="works", dbConn=dbConn)
 
 
 @click.command()
@@ -43,12 +42,9 @@ def main(inputFP: Path, outputFP: Path) -> None:
     dbConn: Engine = createDBConnection(dbPath=absOutputFP)
     DB(dbConn=dbConn)
 
-    print(f"Reading {absInputFP.name}...")
-    strData: List[str] = readFile(jlFilePath=absInputFP)
+    JL: JSONLines = JSONLines(jlFilePath=absInputFP)
+    df: DataFrame = JL.read(jqFormat=WORKS_JQ_FORMAT)
 
-    jsonData: List[dict] = createJSON(data=strData)
-
-    df: DataFrame = buildDataFrame(data=jsonData)
     insertWorks(df=df, dbConn=dbConn)
 
 
