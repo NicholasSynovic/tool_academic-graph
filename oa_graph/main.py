@@ -1,9 +1,7 @@
 from pathlib import Path
-from pprint import pprint as print
 from typing import List
 
 import click
-from numpy import ndarray
 from pandas import DataFrame
 from pyfs import isFile, resolvePath
 from sqlalchemy import Engine
