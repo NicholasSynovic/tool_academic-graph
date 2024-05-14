@@ -12,6 +12,7 @@ click = "^8.1.7"
 progress = "^1.6"
 pandas = "^2.2.2"
 sqlalchemy = "^2.0.30"
+neo4j = "^5.20.0"
 
 
 [build-system]

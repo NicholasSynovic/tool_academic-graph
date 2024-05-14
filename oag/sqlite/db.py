@@ -3,6 +3,7 @@ from typing import List
 from sqlalchemy import (
     Boolean,
     Column,
+    CursorResult,
     DateTime,
     Engine,
     ForeignKeyConstraint,
@@ -59,7 +60,13 @@ class DB:
         sql: TextClause = text(text="SELECT id FROM cites ORDER BY id DESC LIMIT 1;")
         with self.dbConn.connect() as connection:
             try:
-                result: Row = list(connection.execute(sql))[0]
+                result: Row = list(connection.execute(statement=sql))[0]
             except IndexError:
                 return 0
         return result.tuple()[0]
+
+    def getWorkCount(self) -> int:
+        sql: TextClause = text(text="SELECT COUNT(oa_id) FROM works;")
+        with self.dbConn.connect() as connection:
+            result: CursorResult = connection.execute(statement=sql)
+        return result.fetchone().tuple()[0]
