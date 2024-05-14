@@ -1,11 +1,9 @@
-from json import JSONDecodeError, loads
 from pathlib import Path
 from subprocess import DEVNULL, PIPE, CompletedProcess, run
 from typing import List
 
 import pandas
 from pandas import DataFrame
-from progress.bar import Bar
 
 
 def readFile(jlFilePath: Path) -> List[str]:
@@ -21,24 +19,6 @@ def readFile(jlFilePath: Path) -> List[str]:
     )
     outputString: str = process.stdout.decode().strip()
     return outputString.split(sep="\n")
-
-
-def createJSON(data: List[str]) -> List[dict]:
-    jsonObjects: List[dict] = []
-
-    with Bar("Converting JSON strings into JSON objects...", max=len(data)) as bar:
-        datum: str
-        for datum in data:
-            try:
-                json: dict = loads(s=datum)
-            except JSONDecodeError:
-                bar.next()
-                continue
-
-            jsonObjects.append(json)
-            bar.next()
-
-    return jsonObjects
 
 
 def buildDataFrame(data: List[dict]) -> DataFrame:

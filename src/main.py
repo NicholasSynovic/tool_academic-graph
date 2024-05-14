@@ -6,14 +6,20 @@ from pandas import DataFrame
 from pyfs import isFile, resolvePath
 from sqlalchemy import Connection
 
-from src.json import createJSON
+from src.json.utils import createJSON
 from src.json.works import buildDataFrame, readFile
 from src.sqlite import createDBConnection, saveData
 from src.sqlite.works import Works
 
 
 def insertWorks(df: DataFrame, dbConn: Connection) -> None:
-    pass
+    df.drop(columns=["cites", "venue_oa_id"], inplace=True)
+    saveData(df=df, table="works", dbConn=dbConn)
+
+
+def insertCites(df: DataFrame, dbConn: Connection) -> None:
+    df: DataFrame = df[df["oa_id", "cites"]]
+    print(df)
 
 
 @click.command()
@@ -23,7 +29,7 @@ def insertWorks(df: DataFrame, dbConn: Connection) -> None:
     "inputFP",
     type=Path,
     required=True,
-    help="Path to OpenAlex JSON Lines file",
+    help='Path to OpenAlex JSON Lines "Works" file',
 )
 @click.option(
     "-o",
@@ -35,7 +41,7 @@ def insertWorks(df: DataFrame, dbConn: Connection) -> None:
 )
 def main(inputFP: Path, outputFP: Path) -> None:
     absInputFP: Path = resolvePath(path=inputFP)
-    assert absInputFP
+    assert isFile(path=absInputFP)
 
     absOutputFP: Path = resolvePath(path=outputFP)
 
@@ -46,10 +52,8 @@ def main(inputFP: Path, outputFP: Path) -> None:
     jsonData: List[dict] = createJSON(data=strData)
 
     df: DataFrame = buildDataFrame(data=jsonData)
-    df.drop(columns="cites", inplace=True)
-    df.drop(columns="venue_oa_id", inplace=True)
-
-    saveData(df=df, table="works", dbConn=dbConn)
+    insertWorks(df=df, dbConn=dbConn)
+    insertCites(df=df, dbConn=dbConn)
 
 
 if __name__ == "__main__":

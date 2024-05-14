@@ -12,12 +12,13 @@ from sqlalchemy import (
 )
 
 
-class Works:
+class DB:
     def __init__(self, dbConn: Connection) -> None:
         self.metadata: MetaData = MetaData()
         self.dbConn: Connection = dbConn
 
-        self.tableSchema: Table = Table(
+    def createTables(self) -> None:
+        worksSchema: Table = Table(
             "works",
             self.metadata,
             Column("oa_id", String),
@@ -31,7 +32,7 @@ class Works:
             PrimaryKeyConstraint("oa_id"),
         )
 
-        self.citesSchema: Table = Table(
+        citesSchema: Table = Table(
             "relationship_cites",
             self.metadata,
             Column("id", Integer),
