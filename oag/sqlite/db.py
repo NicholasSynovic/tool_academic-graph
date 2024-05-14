@@ -1,3 +1,5 @@
+from typing import List
+
 from sqlalchemy import (
     Boolean,
     Column,
@@ -7,13 +9,17 @@ from sqlalchemy import (
     Integer,
     MetaData,
     PrimaryKeyConstraint,
+    Row,
     String,
     Table,
+    TextClause,
+    text,
 )
 
 
 class DB:
     def __init__(self, dbConn: Engine) -> None:
+        self.dbConn: Engine = dbConn
         metadata: MetaData = MetaData()
 
         worksSchema: Table = Table(
@@ -47,4 +53,13 @@ class DB:
             ),
         )
 
-        metadata.create_all(bind=dbConn)
+        metadata.create_all(bind=self.dbConn)
+
+    def getLargestCitesID(self) -> int:
+        sql: TextClause = text(text="SELECT id FROM cites ORDER BY id DESC LIMIT 1;")
+        with self.dbConn.connect() as connection:
+            try:
+                result: Row = list(connection.execute(sql))[0]
+            except IndexError:
+                return 0
+        return result.tuple()[0]

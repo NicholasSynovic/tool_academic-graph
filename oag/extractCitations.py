@@ -15,8 +15,11 @@ from oag.sqlite import createDBConnection, saveData
 from oag.sqlite.db import DB
 
 
-def insertCitations(df: DataFrame, dbConn: Engine) -> None:
+def insertCitations(df: DataFrame, dbConn: Engine, startingIDX: int = 0) -> None:
     data: List[dict[str, List[str]]] = []
+
+    if startingIDX > 0:
+        startingIDX += 1
 
     df["oa_id"] = df["oa_id"].str.replace(pat="https://openalex.org/", repl="")
     df["cites"] = df["cites"].apply(
@@ -39,9 +42,7 @@ def insertCitations(df: DataFrame, dbConn: Engine) -> None:
             bar.next()
 
     foo: DataFrame = pandas.concat(objs=data, ignore_index=True)
-
-    print(foo)
-
+    foo.index = foo.index + startingIDX
     saveData(df=foo, table="cites", dbConn=dbConn, includeIndex=True)
 
 
@@ -69,12 +70,13 @@ def main(inputFP: Path, outputFP: Path) -> None:
     absOutputFP: Path = resolvePath(path=outputFP)
 
     dbConn: Engine = createDBConnection(dbPath=absOutputFP)
-    DB(dbConn=dbConn)
+    db: DB = DB(dbConn=dbConn)
+    citesLargestID: int = db.getLargestCitesID()
 
     JL: JSONLines = JSONLines(jlFilePath=absInputFP)
     df: DataFrame = JL.read(jqFormat=CITATIONS_JQ_FORMAT)
 
-    insertCitations(df=df, dbConn=dbConn)
+    insertCitations(df=df, dbConn=dbConn, startingIDX=citesLargestID)
 
 
 if __name__ == "__main__":
