@@ -16,9 +16,20 @@ from oag.sqlite.db import DB
 def insertWorks(df: DataFrame, dbConn: Engine) -> None:
     df["oa_id"] = df["oa_id"].str.replace(pat="https://openalex.org/", repl="")
     df["doi"] = df["doi"].str.replace(pat="https://doi.org/", repl="")
-    df["title"] = df["title"].str.title()
     df["paratext"] = df["paratext"].astype(dtype=bool)
     df["retracted"] = df["retracted"].astype(dtype=bool)
+
+    df["title"] = df["title"].str.title()
+    df["title"] = df["title"].str.replace(pat='"', repl=r'\"')
+
+    df["oa_type"] = df["oa_type"].str.replace(pat="-", repl=" ")
+    df["oa_type"] = df["oa_type"].str.title()
+    df["oa_type"] = df["oa_type"].str.replace(" ", "")
+
+    df["cf_type"] = df["cf_type"].str.replace(pat="-", repl=" ")
+    df["cf_type"] = df["cf_type"].str.title()
+    df["cf_type"] = df["cf_type"].str.replace(" ", "")
+
     df["published"] = pandas.to_datetime(
         arg=df["published"],
         errors="coerce",
