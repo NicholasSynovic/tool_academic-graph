@@ -2,14 +2,13 @@ from pathlib import Path
 from typing import List
 
 import click
-from pandas import DataFrame
-from pyfs import isFile, resolvePath
-from sqlalchemy import Engine
-
 from oa_graph.json_lines.utils import createJSON
 from oa_graph.json_lines.works import buildDataFrame, readFile
 from oa_graph.sqlite import createDBConnection, saveData
 from oa_graph.sqlite.db import DB
+from pandas import DataFrame
+from pyfs import isFile, resolvePath
+from sqlalchemy import Engine
 
 
 def insertWorks(df: DataFrame, dbConn: Engine) -> None:
