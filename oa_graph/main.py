@@ -1,25 +1,22 @@
 from pathlib import Path
+from pprint import pprint as print
 from typing import List
 
 import click
+from numpy import ndarray
 from pandas import DataFrame
 from pyfs import isFile, resolvePath
-from sqlalchemy import Connection
+from sqlalchemy import Engine
 
-from src.json.utils import createJSON
-from src.json.works import buildDataFrame, readFile
-from src.sqlite import createDBConnection, saveData
-from src.sqlite.db import DB
-
-
-def insertWorks(df: DataFrame, dbConn: Connection) -> None:
-    df.drop(columns=["cites", "venue_oa_id"], inplace=True)
-    saveData(df=df, table="works", dbConn=dbConn)
+from oa_graph.json_lines.utils import createJSON
+from oa_graph.json_lines.works import buildDataFrame, readFile
+from oa_graph.sqlite import createDBConnection, saveData
+from oa_graph.sqlite.db import DB
 
 
-def insertCites(df: DataFrame, dbConn: Connection) -> None:
-    df: DataFrame = df[df["oa_id", "cites"]]
-    print(df)
+def insertWorks(df: DataFrame, dbConn: Engine) -> None:
+    foo: DataFrame = df.drop(columns=["cites", "venue_oa_id"])
+    saveData(df=foo, table="works", dbConn=dbConn)
 
 
 @click.command()
@@ -45,16 +42,16 @@ def main(inputFP: Path, outputFP: Path) -> None:
 
     absOutputFP: Path = resolvePath(path=outputFP)
 
-    dbConn: Connection = createDBConnection(dbPath=absOutputFP)
-    db: DB = DB(dbConn=dbConn)  # TODO: Make this a generic SQLite obj
-    db.createTables()
+    dbConn: Engine = createDBConnection(dbPath=absOutputFP)
+    DB(dbConn=dbConn)
 
+    print(f"Reading {absInputFP.name}...")
     strData: List[str] = readFile(jlFilePath=absInputFP)
+
     jsonData: List[dict] = createJSON(data=strData)
 
     df: DataFrame = buildDataFrame(data=jsonData)
     insertWorks(df=df, dbConn=dbConn)
-    insertCites(df=df, dbConn=dbConn)
 
 
 if __name__ == "__main__":

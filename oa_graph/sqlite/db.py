@@ -1,8 +1,8 @@
 from sqlalchemy import (
     Boolean,
     Column,
-    Connection,
     DateTime,
+    Engine,
     ForeignKeyConstraint,
     Integer,
     MetaData,
@@ -13,14 +13,12 @@ from sqlalchemy import (
 
 
 class DB:
-    def __init__(self, dbConn: Connection) -> None:
-        self.metadata: MetaData = MetaData()
-        self.dbConn: Connection = dbConn
+    def __init__(self, dbConn: Engine) -> None:
+        metadata: MetaData = MetaData()
 
-    def createTables(self) -> None:
         worksSchema: Table = Table(
             "works",
-            self.metadata,
+            metadata,
             Column("oa_id", String),
             Column("doi", String),
             Column("title", String),
@@ -34,7 +32,7 @@ class DB:
 
         citesSchema: Table = Table(
             "relationship_cites",
-            self.metadata,
+            metadata,
             Column("id", Integer),
             Column("work", String),
             Column("reference", String),
@@ -49,4 +47,4 @@ class DB:
             ),
         )
 
-        self.metadata.create_all(bind=self.dbConn)
+        metadata.create_all(bind=dbConn)

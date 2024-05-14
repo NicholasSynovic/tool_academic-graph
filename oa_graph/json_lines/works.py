@@ -11,7 +11,7 @@ def readFile(jlFilePath: Path) -> List[str]:
         [
             "jq",
             "-c",
-            "{doi: .doi, title: .title, oa_id: .id, paratext: .is_paratext, retracted: .is_retracted, venue_oa_id: .primary_location.source.id, published: .publication_date, oa_type: .type, cf_type: .type_crossref, cites: [.locations[] | .source.id]}",
+            "{doi: .doi, title: .title, oa_id: .id, paratext: .is_paratext, retracted: .is_retracted, venue_oa_id: .primary_location.source.id, published: .publication_date, oa_type: .type, cf_type: .type_crossref, cites: .referenced_works[]}",
             jlFilePath,
         ],
         stderr=DEVNULL,

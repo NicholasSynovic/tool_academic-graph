@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "src"
+name = "oa-graph"
 version = "0.1.0"
 description = ""
 authors = ["Nicholas M. Synovic <nicholas.synovic@gmail.com>"]
@@ -10,7 +10,7 @@ python = ">=3.10,<4.0"
 pyfs = {git = "https://github.com/NicholasSynovic/python-fs-utils"}
 click = "^8.1.7"
 progress = "^1.6"
-pandas = "2.2.1"
+pandas = "^2.2.2"
 sqlalchemy = "^2.0.30"
 
 
