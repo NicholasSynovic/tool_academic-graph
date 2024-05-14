@@ -31,7 +31,7 @@ class DB:
         )
 
         citesSchema: Table = Table(
-            "relationship_cites",
+            "cites",
             metadata,
             Column("id", Integer),
             Column("work", String),
