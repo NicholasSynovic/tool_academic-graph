@@ -33,7 +33,7 @@ def addWorks(
             chunksize=1000,
         ):
             neo4j.addNode(df=df)
-            quit()
+            bar.next()
 
 
 @click.command()
