@@ -3,7 +3,6 @@ from typing import List, Tuple
 
 from neo4j import Driver, GraphDatabase, ManagedTransaction
 from pandas import DataFrame, Series
-from progress.bar import Bar
 
 
 class Neo4J:
