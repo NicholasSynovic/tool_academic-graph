@@ -20,13 +20,16 @@ class Neo4J:
 
     def addNode(self, df: DataFrame) -> None:
         queries: List[str] = []
+
         queryTemplate: Template = Template(
-            template=r'MERGE (n:${type} {oa_id: "${oa_id}", doi: "${doi}", title: "${title}"})',
+            template=r'(n${id}:${type} {oa_id: "${oa_id}", doi: "${doi}", title: "${title}"})',
         )
 
         datum: Series
-        for _, datum in df.iterrows():
+        idx: int
+        for idx, datum in df.iterrows():
             query: str = queryTemplate.substitute(
+                id=idx,
                 type=datum["oa_type"],
                 oa_id=datum["oa_id"],
                 doi=datum["doi"],
@@ -35,9 +38,13 @@ class Neo4J:
             queries.append(query)
 
         with self.driver.session() as session:
-            query: str
-            for query in queries:
-                session.execute_write(self._createNode, query)
+            query: str = r"CREATE " + ", ".join(queries)
+            session.execute_write(self._createNode, query)
+
+    def createNodeIndex(self, indexName: str, property: str) -> None:
+        query: str = f"CREATE INDEX {indexName} FOR (n) ON (n.{property})"
+        with self.driver.session() as session:
+            session.execute_write(self._createNode, query)
 
     def addRelationship(self, df: DataFrame) -> None:
         queries: List[str] = []
@@ -45,7 +52,7 @@ class Neo4J:
             template=r"""
             MATCH (n)
             MATCH (m)
-            WHERE (n.oa_id = ${node1}) AND (m.oa_id = ${node2})
+            WHERE (n.oa_id = "${node1}") AND (m.oa_id = "${node2}")
             MERGE (n)-[r:Cites]->(m)
             """,
         )
