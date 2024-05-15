@@ -36,6 +36,29 @@ def addWorks(
             bar.next()
 
 
+def addCites(
+    db: DB,
+    dbConn: Engine,
+    username: str,
+    password: str,
+    uri: str,
+    chunksize: int = 1000,
+) -> None:
+    neo4j: Neo4J = Neo4J(uri=uri, username=username, password=password)
+
+    citesCount: int = db.getLargestCitesID()
+
+    with Bar("Adding works...", max=ceil(citesCount / chunksize)) as bar:
+        df: DataFrame
+        for df in pandas.read_sql_table(
+            table_name="cites",
+            con=dbConn,
+            chunksize=1000,
+        ):
+            neo4j.addRelationship(df=df)
+            bar.next()
+
+
 @click.command()
 @click.option(
     "-i",
