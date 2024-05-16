@@ -1,8 +1,9 @@
 from string import Template
 from typing import List, Tuple
 
-from neo4j import Driver, GraphDatabase, ManagedTransaction
+from neo4j import AsyncGraphDatabase, Driver, GraphDatabase, ManagedTransaction
 from pandas import DataFrame, Series
+from progress.bar import Bar
 
 
 class Neo4J:
@@ -15,10 +16,34 @@ class Neo4J:
         )
 
     @staticmethod
-    def _createNode(tx: ManagedTransaction, query: str) -> None:
+    async def _async_ExecuteQuery(tx: ManagedTransaction, query: str) -> None:
+        await tx.run(query=query)
+
+    @staticmethod
+    def _executeQuery(tx: ManagedTransaction, query: str) -> None:
         tx.run(query=query)
 
-    def addNode(self, df: DataFrame) -> None:
+    async def async_AddRelationships(
+        self, df: DataFrame, bar: Bar, database: str = "neo4j"
+    ) -> None:
+        # https://community.neo4j.com/t/creating-relationship-over-several-millions-of-nodes/24390/3
+        queryTemplate: Template = Template(
+            template=r'MATCH (n:Work) WHERE n.oa_id = "${node1}" WITH n MATCH (m:Work) WHERE m.oa_id = "${node2}" CREATE (n)-[r:Cites]->(m)',
+        )
+
+        async with AsyncGraphDatabase.driver(self.uri, auth=self.auth) as driver:
+            async with driver.session(database=database) as session:
+                datum: Series
+                for _, datum in df.iterrows():
+                    query: str = queryTemplate.substitute(
+                        node1=datum["work"],
+                        node2=datum["reference"],
+                    )
+                    # queries.append(query)
+                    await session.execute_write(self._async_ExecuteQuery, query)
+                    bar.next()
+
+    def addWorkNode(self, df: DataFrame) -> None:
         queries: List[str] = []
 
         queryTemplate: Template = Template(
@@ -39,22 +64,18 @@ class Neo4J:
 
         with self.driver.session() as session:
             query: str = r"CREATE " + ", ".join(queries)
-            session.execute_write(self._createNode, query)
+            session.execute_write(self._executeQuery, query)
 
-    def createNodeIndex(self, indexName: str, property: str) -> None:
-        query: str = f"CREATE TEXT INDEX {indexName} FOR (n:Work) ON (n.{property})"
+    def createWorkNodeIndex(self) -> None:
         with self.driver.session() as session:
-            session.execute_write(self._createNode, query)
+            query: str = f"CREATE TEXT INDEX workNodes FOR (n:Work) ON (n.oa_id)"
+            session.execute_write(self._executeQuery, query)
 
     def addRelationship(self, df: DataFrame) -> None:
+        # https://community.neo4j.com/t/creating-relationship-over-several-millions-of-nodes/24390/3
         queries: List[str] = []
         queryTemplate: Template = Template(
-            template=r"""
-            MATCH (n)
-            MATCH (m)
-            WHERE (n.oa_id = "${node1}") AND (m.oa_id = "${node2}")
-            MERGE (n)-[r:Cites]->(m)
-            """,
+            template=r'MATCH (n:Work) WHERE n.oa_id = "${node1}" WITH n MATCH (m:Work) WHERE m.oa_id = "${node2}" CREATE (n)-[r:Cites]->(m)',
         )
 
         datum: Series
@@ -68,4 +89,4 @@ class Neo4J:
         with self.driver.session() as session:
             query: str
             for query in queries:
-                session.execute_write(self._createNode, query)
+                session.execute_write(self._executeQuery, query)

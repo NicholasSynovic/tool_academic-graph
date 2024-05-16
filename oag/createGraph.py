@@ -1,3 +1,4 @@
+import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from math import ceil
 from pathlib import Path
@@ -23,12 +24,12 @@ def addWorks(
 ) -> None:
     worksCount: int = db.getWorkCount()
 
-    with Bar("Adding works...", max=ceil(worksCount / chunksize)) as bar:
+    with Bar("Adding work nodes...", max=ceil(worksCount / chunksize)) as bar:
         with ThreadPoolExecutor() as executor:
 
             def _run(df: DataFrame) -> None:
-                neo4j.addNode(df=df)
                 bar.next()
+                neo4j.addWorkNode(df=df)
 
             dfs: Generator = pandas.read_sql_table(
                 table_name="works",
@@ -63,6 +64,36 @@ def addCites(
             )
 
             executor.map(_run, dfs)
+
+
+def async_AddCites(
+    db: DB,
+    dbConn: Engine,
+    neo4j: Neo4J,
+) -> None:
+    citesCount: int = db.getLargestCitesID()
+
+    print("Reading works table...")
+    worksDF: DataFrame = pandas.read_sql_table(
+        table_name="works",
+        con=dbConn,
+    )
+    print("Read works table")
+
+    print("Reading cites table...")
+    citesDF: DataFrame = pandas.read_sql_table(
+        table_name="cites",
+        con=dbConn,
+    )
+    print("Read cites table")
+
+    df: DataFrame = citesDF[~citesDF["reference"].isin(worksDF["oa_id"])]
+    print(citesDF.shape)
+    print(df.shape)
+    quit()
+
+    with Bar("Adding citation relationships...", max=ceil(citesCount)) as bar:
+        asyncio.run(neo4j.async_AddRelationships(df=df, bar=bar))
 
 
 @click.command()
@@ -121,9 +152,11 @@ def main(
     #     neo4j=neo4j,
     # )
 
-    # neo4j.createNodeIndex(indexName="nodes", property="oa_id")
+    # neo4j.createWorkNodeIndex()
 
-    addCites(db=db, dbConn=dbConn, neo4j=neo4j)
+    # addCites(db=db, dbConn=dbConn, neo4j=neo4j)
+
+    async_AddCites(db=db, dbConn=dbConn, neo4j=neo4j)
 
 
 if __name__ == "__main__":
