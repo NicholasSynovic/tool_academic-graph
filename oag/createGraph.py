@@ -1,5 +1,7 @@
+from concurrent.futures import ThreadPoolExecutor
 from math import ceil
 from pathlib import Path
+from typing import Generator
 
 import click
 import pandas
@@ -16,47 +18,51 @@ from oag.sqlite.db import DB
 def addWorks(
     db: DB,
     dbConn: Engine,
-    username: str,
-    password: str,
-    uri: str,
+    neo4j: Neo4J,
     chunksize: int = 1000,
 ) -> None:
-    neo4j: Neo4J = Neo4J(uri=uri, username=username, password=password)
-
     worksCount: int = db.getWorkCount()
 
     with Bar("Adding works...", max=ceil(worksCount / chunksize)) as bar:
-        df: DataFrame
-        for df in pandas.read_sql_table(
-            table_name="works",
-            con=dbConn,
-            chunksize=1000,
-        ):
-            neo4j.addNode(df=df)
-            bar.next()
+        with ThreadPoolExecutor() as executor:
+
+            def _run(df: DataFrame) -> None:
+                neo4j.addNode(df=df)
+                bar.next()
+
+            dfs: Generator = pandas.read_sql_table(
+                table_name="works",
+                con=dbConn,
+                chunksize=chunksize,
+            )
+
+            executor.map(_run, dfs)
 
 
 def addCites(
     db: DB,
     dbConn: Engine,
-    username: str,
-    password: str,
-    uri: str,
+    neo4j: Neo4J,
     chunksize: int = 1000,
 ) -> None:
-    neo4j: Neo4J = Neo4J(uri=uri, username=username, password=password)
-
     citesCount: int = db.getLargestCitesID()
 
-    with Bar("Adding works...", max=ceil(citesCount / chunksize)) as bar:
-        df: DataFrame
-        for df in pandas.read_sql_table(
-            table_name="cites",
-            con=dbConn,
-            chunksize=1000,
-        ):
-            neo4j.addRelationship(df=df)
-            bar.next()
+    with Bar(
+        "Adding citation relationships...", max=ceil(citesCount / chunksize)
+    ) as bar:
+        with ThreadPoolExecutor() as executor:
+
+            def _run(df: DataFrame) -> None:
+                neo4j.addRelationship(df=df)
+                bar.next()
+
+            dfs: Generator = pandas.read_sql_table(
+                table_name="cites",
+                con=dbConn,
+                chunksize=chunksize,
+            )
+
+            executor.map(_run, dfs)
 
 
 @click.command()
@@ -103,15 +109,21 @@ def main(
 
     dbConn: Engine = createDBConnection(dbPath=absInputFP)
     db: DB = DB(dbConn=dbConn)
-    # citesLargestID: int = db.getLargestCitesID()
-
-    addWorks(
-        db=db,
-        dbConn=dbConn,
+    neo4j: Neo4J = Neo4J(
+        uri=neo4jURI,
         username=neo4jUsername,
         password=neo4jPassword,
-        uri=neo4jURI,
     )
+
+    # addWorks(
+    #     db=db,
+    #     dbConn=dbConn,
+    #     neo4j=neo4j,
+    # )
+
+    # neo4j.createNodeIndex(indexName="nodes", property="oa_id")
+
+    addCites(db=db, dbConn=dbConn, neo4j=neo4j)
 
 
 if __name__ == "__main__":
