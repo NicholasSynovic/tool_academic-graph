@@ -22,7 +22,7 @@ class Neo4J:
         queries: List[str] = []
 
         queryTemplate: Template = Template(
-            template=r'(n${id}:${type} {oa_id: "${oa_id}", doi: "${doi}", title: "${title}"})',
+            template=r'(n${id}:Work {oa_id: "${oa_id}", doi: "${doi}", title: "${title}", type: "${type}"})',
         )
 
         datum: Series
@@ -42,7 +42,7 @@ class Neo4J:
             session.execute_write(self._createNode, query)
 
     def createNodeIndex(self, indexName: str, property: str) -> None:
-        query: str = f"CREATE INDEX {indexName} FOR (n) ON (n.{property})"
+        query: str = f"CREATE TEXT INDEX {indexName} FOR (n:Work) ON (n.{property})"
         with self.driver.session() as session:
             session.execute_write(self._createNode, query)
 
