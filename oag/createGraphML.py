@@ -47,21 +47,25 @@ def buildXML(
     with Bar("Adding edges...", max=edgesDF.shape[0]) as bar:
         row: Tuple[Hashable, Series]
         for row in edgesDF.iterrows():
+            try:
+                nodeMapping[row[1]["work"]]
+                nodeMapping[row[1]["reference"]]
+            except KeyError:
+                bar.next()
+                continue
+
             edge: Element = etree.SubElement(graphNode, "edge")
             edge.set(key="id", value=f"e{row[0]}")
 
-            try:
-                edge.set(
-                    key="source",
-                    value=nodeMapping[row[1]["work"]],
-                )
+            edge.set(
+                key="source",
+                value=nodeMapping[row[1]["work"]],
+            )
 
-                edge.set(
-                    key="target",
-                    value=nodeMapping[row[1]["reference"]],
-                )
-            except KeyError:
-                pass
+            edge.set(
+                key="target",
+                value=nodeMapping[row[1]["reference"]],
+            )
 
             bar.next()
 
