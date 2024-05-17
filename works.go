@@ -107,7 +107,6 @@ func main() {
 	var jsonStrings []string
 
 	oaWorksPath, _ = parseCommandLine()
-	// fmt.Println(dbPath)
 
 	jsonStrings = readJSONLines(oaWorksPath)
 
