@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -102,6 +103,24 @@ func readJSONLines(fp string) []string {
 	return data
 }
 
+func createJSONObjs(jsonStrings []string) {
+	// var data []string
+	var jsonBytes []byte
+	var jsonObj map[string]any
+
+	fmt.Println("Converting JSON strings to objects...")
+	for i := 0; i < len(jsonStrings); i++ {
+		jsonBytes = []byte(jsonStrings[i])
+		err := json.Unmarshal(jsonBytes, &jsonObj)
+
+		if err != nil {
+			fmt.Println("JSON decode error", i)
+			os.Exit(1)
+		}
+	}
+
+}
+
 func main() {
 	// var oaWorksPath, dbPath string
 	var oaWorksPath string
@@ -110,9 +129,6 @@ func main() {
 	oaWorksPath, _ = parseCommandLine()
 
 	jsonStrings = readJSONLines(oaWorksPath)
-
-	for i := 0; i < len(jsonStrings); i++ {
-		fmt.Println(jsonStrings[i])
-	}
+	createJSONObjs(jsonStrings)
 
 }
