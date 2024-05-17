@@ -70,6 +70,7 @@ func readJSONLines(fp string) []string {
 	var data []string
 	var lineReader *bufio.Reader
 	var bytes []byte
+	var line string
 
 	file, err = os.Open(fp)
 	if err != nil {
@@ -91,7 +92,7 @@ func readJSONLines(fp string) []string {
 			fmt.Println("Error reading file bytes of", fp)
 			os.Exit(1)
 		} else {
-			line := string(bytes)
+			line = string(bytes)
 			line = strings.TrimSpace(line)
 			data = append(data, line)
 		}
