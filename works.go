@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 /*
@@ -61,9 +64,55 @@ func parseCommandLine() (string, string) {
 	return absOAWorksPath, absDBPath
 }
 
-func main() {
-	var oaWorksPath, dbPath string
+func readJSONLines(fp string) []string {
+	var file *os.File
+	var err error
+	var data []string
+	var lineReader *bufio.Reader
+	var bytes []byte
 
-	oaWorksPath, dbPath = parseCommandLine()
-	fmt.Println(oaWorksPath, dbPath)
+	file, err = os.Open(fp)
+	if err != nil {
+		fmt.Println("Error reading", fp)
+		os.Exit(1)
+	}
+
+	defer file.Close()
+
+	fmt.Println("Reading", fp)
+
+	lineReader = bufio.NewReader(file)
+	for {
+		bytes, err = lineReader.ReadBytes('\n')
+
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			fmt.Println("Error reading file bytes of", fp)
+			os.Exit(1)
+		} else {
+			line := string(bytes)
+			line = strings.TrimSpace(line)
+			data = append(data, line)
+		}
+
+	}
+
+	return data
+}
+
+func main() {
+	// var oaWorksPath, dbPath string
+	var oaWorksPath string
+	var jsonStrings []string
+
+	oaWorksPath, _ = parseCommandLine()
+	// fmt.Println(dbPath)
+
+	jsonStrings = readJSONLines(oaWorksPath)
+
+	for i := 0; i < len(jsonStrings); i++ {
+		fmt.Println(jsonStrings[i])
+	}
+
 }
