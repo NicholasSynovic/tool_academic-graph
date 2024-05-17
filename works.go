@@ -9,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/schollz/progressbar/v3"
 )
 
 /*
@@ -65,7 +67,7 @@ func parseCommandLine() (string, string) {
 	return absOAWorksPath, absDBPath
 }
 
-func readJSONLines(fp string) []string {
+func readJSONLines(fp string) ([]string, int64) {
 	var file *os.File
 	var err error
 	var data []string
@@ -81,7 +83,7 @@ func readJSONLines(fp string) []string {
 
 	defer file.Close()
 
-	fmt.Println("Reading", fp)
+	bar := progressbar.Default(-1, ("Reading lines from " + fp))
 
 	lineReader = bufio.NewReader(file)
 	for {
@@ -98,17 +100,20 @@ func readJSONLines(fp string) []string {
 			data = append(data, line)
 		}
 
+		bar.Add(1)
+
 	}
 
-	return data
+	return data, int64(len(data))
 }
 
-func createJSONObjs(jsonStrings []string) {
-	// var data []string
+func createJSONObjs(jsonStrings []string, barSize int64) []map[string]any {
+	var data []map[string]any
 	var jsonBytes []byte
 	var jsonObj map[string]any
 
-	fmt.Println("Converting JSON strings to objects...")
+	bar := progressbar.Default(barSize, "Converting JSON strings to objects...")
+
 	for i := 0; i < len(jsonStrings); i++ {
 		jsonBytes = []byte(jsonStrings[i])
 		err := json.Unmarshal(jsonBytes, &jsonObj)
@@ -117,18 +122,24 @@ func createJSONObjs(jsonStrings []string) {
 			fmt.Println("JSON decode error", i)
 			os.Exit(1)
 		}
+
+		data = append(data, jsonObj)
+
+		bar.Add(1)
 	}
 
+	return data
 }
 
 func main() {
 	// var oaWorksPath, dbPath string
 	var oaWorksPath string
 	var jsonStrings []string
+	var jsonObjs []map[string]any
+	var jsonStringsCount int64
 
 	oaWorksPath, _ = parseCommandLine()
 
-	jsonStrings = readJSONLines(oaWorksPath)
-	createJSONObjs(jsonStrings)
-
+	jsonStrings, jsonStringsCount = readJSONLines(oaWorksPath)
+	jsonObjs = createJSONObjs(jsonStrings, jsonStringsCount)
 }
