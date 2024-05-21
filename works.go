@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/schollz/progressbar/v3"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -217,6 +218,29 @@ func createWorkArray(jsonObjs []map[string]any, barSize int64) []Work {
 	return data
 }
 
+func createTable(dbConn *sql.DB) {
+	var sqlQuery string
+	var err error
+
+	sqlQuery = `CREATE TABLE IF NOT EXISTS works (
+		oa_id TEXT NOT NULL,
+		doi TEXT,
+		title TEXT,
+		paratext BOOL,
+		retracted BOOL,
+		published DATE,
+		oa_type TEXT,
+		cf_type TEXT
+	);`
+
+	_, err = dbConn.Exec(sqlQuery)
+
+	if err != nil {
+		fmt.Println("Error creating table")
+		os.Exit(1)
+	}
+}
+
 func main() {
 	var oaWorksPath, dbPath string
 	var jsonStrings []string
@@ -228,6 +252,9 @@ func main() {
 	oaWorksPath, dbPath = parseCommandLine()
 
 	dbConn = connectToDatabase(dbPath)
+	defer dbConn.Close()
+
+	createTable(dbConn)
 
 	jsonStrings, jsonStringsCount = readJSONLines(oaWorksPath)
 	jsonObjs = createJSONObjs(jsonStrings, jsonStringsCount)
