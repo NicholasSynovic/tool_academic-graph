@@ -1,12 +1,10 @@
 package main
 
 import (
-	"bufio"
 	"database/sql"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -102,46 +100,6 @@ func connectToDatabase(dbPath string) *sql.DB {
 	}
 
 	return dbConn
-}
-
-func readJSONLines(fp string) ([]string, int64) {
-	var file *os.File
-	var err error
-	var data []string
-	var lineReader *bufio.Reader
-	var bytes []byte
-	var line string
-
-	file, err = os.Open(fp)
-	if err != nil {
-		fmt.Println("Error reading", fp)
-		os.Exit(1)
-	}
-
-	defer file.Close()
-
-	bar := progressbar.Default(-1, ("Reading lines from " + fp))
-
-	lineReader = bufio.NewReader(file)
-	for {
-		bytes, err = lineReader.ReadBytes('\n')
-
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			fmt.Println("Error reading file bytes of", fp)
-			os.Exit(1)
-		} else {
-			line = string(bytes)
-			line = strings.TrimSpace(line)
-			data = append(data, line)
-		}
-
-		bar.Add(1)
-
-	}
-
-	return data, int64(len(data))
 }
 
 func createJSONObjs(jsonStrings []string, barSize int64) []map[string]any {
@@ -284,7 +242,7 @@ func main() {
 
 	createTable(dbConn)
 
-	jsonStrings, jsonStringsCount = readJSONLines(oaWorksPath)
+	jsonStrings, jsonStringsCount = readFile(oaWorksPath)
 	jsonObjs = createJSONObjs(jsonStrings, jsonStringsCount)
 	workObjs = createWorkArray(jsonObjs, int64(len(jsonObjs)))
 	writeDataToDB(dbConn, workObjs, int64(len(workObjs)))
