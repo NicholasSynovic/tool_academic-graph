@@ -64,6 +64,8 @@ func jsonToWorkObjs(jsonObjs []map[string]any, channel chan Work) {
 			continue
 		}
 		title = caser.String(title)
+		title = strings.Replace(title, "\"", "", -1)
+		title = strings.Replace(title, `"`, `\"`, -1)
 
 		publishedDateString, _ := jsonObj["publication_date"].(string)
 		publishedDate, _ := time.Parse("2006-01-02", publishedDateString)
