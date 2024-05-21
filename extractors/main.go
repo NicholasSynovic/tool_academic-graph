@@ -35,8 +35,8 @@ func parseCommandLine() (string, string) {
 	var inputPath, outputPath string
 	var err error
 
-	flag.StringVar(&inputPath, "i", "", "Path to OpenAlex 'Works' JSON Lines file")
-	flag.StringVar(&outputPath, "o", "", "Path to SQLite3 database")
+	flag.StringVar(&inputPath, "i", "", `Path to OpenAlex "Works" JSON Lines file`)
+	flag.StringVar(&outputPath, "o", "", "Path to output JSON file")
 	flag.Parse()
 
 	if inputPath == "" {
