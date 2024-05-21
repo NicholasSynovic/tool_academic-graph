@@ -228,22 +228,14 @@ func writeDataToDB(dbConn *sql.DB, workObjs []Work, barSize int64) {
 }
 
 func main() {
-	var oaWorksPath, dbPath string
-	var jsonStrings []string
-	var jsonObjs []map[string]any
-	var jsonStringsCount int64
-	var workObjs []Work
-	var dbConn *sql.DB
+	jsonFilePath, _ := parseCommandLine()
 
-	oaWorksPath, dbPath = parseCommandLine()
+	// Read in JSON data
+	fmt.Println("Opening file:", filepath.Base(jsonFilePath))
+	jsonFile := openFile(jsonFilePath)
+	fmt.Println("Reading JSON strings:", filepath.Base(jsonFilePath))
+	jsonLines := readLines(jsonFile)
+	fmt.Println("Closing file:", filepath.Base(jsonFilePath))
+	jsonFile.Close()
 
-	dbConn = connectToDatabase(dbPath)
-	defer dbConn.Close()
-
-	createTable(dbConn)
-
-	jsonStrings, jsonStringsCount = readFile(oaWorksPath)
-	jsonObjs = createJSONObjs(jsonStrings, jsonStringsCount)
-	workObjs = createWorkArray(jsonObjs, int64(len(jsonObjs)))
-	writeDataToDB(dbConn, workObjs, int64(len(workObjs)))
 }
