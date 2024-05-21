@@ -241,6 +241,34 @@ func createTable(dbConn *sql.DB) {
 	}
 }
 
+func writeDataToDB(dbConn *sql.DB, workObjs []Work, barSize int64) {
+	var queries []string
+
+	bar := progressbar.Default(barSize, "Creating SQL queries...")
+
+	for i := 0; i < int(barSize); i++ {
+		sqlQuery := fmt.Sprintf(`INSERT INTO works (oa_id, doi, title, paratext, retracted, published, oa_type, cf_type)VALUES (%s, %s, %s, %t, %t, %s, %s, %s);`, workObjs[i].OA_ID, workObjs[i].DOI, workObjs[i].Title, workObjs[i].Is_Paratext, workObjs[i].Is_Retracted, workObjs[i].Date_Published, workObjs[i].OA_Type, workObjs[i].CF_Type)
+
+		queries = append(queries, sqlQuery)
+
+		bar.Add(1)
+	}
+
+	bar2 := progressbar.Default(barSize, "Writing data to database...")
+	for i := 0; i < len(queries); i++ {
+		_, err := dbConn.Exec(queries[i])
+
+		if err != nil {
+			fmt.Println(err.Error())
+			fmt.Printf("Error writing line %d to database\n", i)
+			os.Exit(1)
+		}
+
+		bar2.Add(1)
+	}
+
+}
+
 func main() {
 	var oaWorksPath, dbPath string
 	var jsonStrings []string
@@ -259,8 +287,5 @@ func main() {
 	jsonStrings, jsonStringsCount = readJSONLines(oaWorksPath)
 	jsonObjs = createJSONObjs(jsonStrings, jsonStringsCount)
 	workObjs = createWorkArray(jsonObjs, int64(len(jsonObjs)))
-
-	for i := 0; i < len(workObjs); i++ {
-		fmt.Println(workObjs[i])
-	}
+	writeDataToDB(dbConn, workObjs, int64(len(workObjs)))
 }
