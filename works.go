@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"database/sql"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -79,6 +80,27 @@ func parseCommandLine() (string, string) {
 	}
 
 	return absOAWorksPath, absDBPath
+}
+
+/*
+Connect to a SQLite3 database
+
+# Returns a connection to the database
+
+On error, exits the application with code 1
+*/
+func connectToDatabase(dbPath string) *sql.DB {
+	var dbConn *sql.DB
+	var err error
+
+	dbConn, err = sql.Open("sqlite3", dbPath)
+
+	if err != nil {
+		fmt.Println("Could not open database:", dbPath)
+		os.Exit(1)
+	}
+
+	return dbConn
 }
 
 func readJSONLines(fp string) ([]string, int64) {
@@ -196,14 +218,16 @@ func createWorkArray(jsonObjs []map[string]any, barSize int64) []Work {
 }
 
 func main() {
-	// var oaWorksPath, dbPath string
-	var oaWorksPath string
+	var oaWorksPath, dbPath string
 	var jsonStrings []string
 	var jsonObjs []map[string]any
 	var jsonStringsCount int64
 	var workObjs []Work
+	var dbConn *sql.DB
 
-	oaWorksPath, _ = parseCommandLine()
+	oaWorksPath, dbPath = parseCommandLine()
+
+	dbConn = connectToDatabase(dbPath)
 
 	jsonStrings, jsonStringsCount = readJSONLines(oaWorksPath)
 	jsonObjs = createJSONObjs(jsonStrings, jsonStringsCount)
