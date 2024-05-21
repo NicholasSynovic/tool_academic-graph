@@ -161,18 +161,20 @@ func createWorkArray(jsonObjs []map[string]any, barSize int64) []Work {
 
 		doi, ok := jsonObj["doi"].(string)
 		if !ok {
+			bar.Add(1)
 			continue
 		}
 		doi = strings.Replace(doi, "https://doi.org/", "", -1)
 
 		title, ok := jsonObj["title"].(string)
 		if !ok {
+			bar.Add(1)
 			continue
 		}
 		title = caser.String(title)
 
 		publishedDateString, _ := jsonObj["publication_date"].(string)
-		publishedDate, _ := time.Parse(time.RFC3339, publishedDateString)
+		publishedDate, _ := time.Parse("2006-01-02", publishedDateString)
 
 		workObj := Work{
 			OA_ID:          id,
@@ -205,7 +207,7 @@ func main() {
 
 	jsonStrings, jsonStringsCount = readJSONLines(oaWorksPath)
 	jsonObjs = createJSONObjs(jsonStrings, jsonStringsCount)
-	workObjs = createWorkArray(jsonObjs, jsonStringsCount)
+	workObjs = createWorkArray(jsonObjs, int64(len(jsonObjs)))
 
 	for i := 0; i < len(workObjs); i++ {
 		fmt.Println(workObjs[i])
