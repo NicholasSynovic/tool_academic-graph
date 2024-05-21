@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"flag"
 	"fmt"
 	"os"
@@ -9,7 +8,6 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/schollz/progressbar/v3"
 )
 
 /*
@@ -66,84 +64,17 @@ func parseCommandLine() (string, string) {
 	return absOAWorksPath, absDBPath
 }
 
-/*
-Connect to a SQLite3 database
-
-# Returns a connection to the database
-
-On error, exits the application with code 1
-*/
-func connectToDatabase(dbPath string) *sql.DB {
-	var dbConn *sql.DB
-	var err error
-
-	dbConn, err = sql.Open("sqlite3", dbPath)
-
-	if err != nil {
-		fmt.Println("Could not open database:", dbPath)
-		os.Exit(1)
-	}
-
-	return dbConn
-}
-
-func createTable(dbConn *sql.DB) {
-	var sqlQuery string
-	var err error
-
-	sqlQuery = `CREATE TABLE IF NOT EXISTS works (
-		oa_id TEXT NOT NULL,
-		doi TEXT,
-		title TEXT,
-		paratext BOOL,
-		retracted BOOL,
-		published DATE,
-		oa_type TEXT,
-		cf_type TEXT
-	);`
-
-	_, err = dbConn.Exec(sqlQuery)
-
-	if err != nil {
-		fmt.Println("Error creating table")
-		os.Exit(1)
-	}
-}
-
-func writeDataToDB(dbConn *sql.DB, workObjs []Work, barSize int64) {
-	var queries []string
-
-	bar := progressbar.Default(barSize, "Creating SQL queries...")
-
-	for i := 0; i < int(barSize); i++ {
-		sqlQuery := fmt.Sprintf(`INSERT INTO works (oa_id, doi, title, paratext, retracted, published, oa_type, cf_type)VALUES (%s, %s, %s, %t, %t, %s, %s, %s);`, workObjs[i].OA_ID, workObjs[i].DOI, workObjs[i].Title, workObjs[i].Is_Paratext, workObjs[i].Is_Retracted, workObjs[i].Date_Published, workObjs[i].OA_Type, workObjs[i].CF_Type)
-
-		queries = append(queries, sqlQuery)
-
-		bar.Add(1)
-	}
-
-	bar2 := progressbar.Default(barSize, "Writing data to database...")
-	for i := 0; i < len(queries); i++ {
-		_, err := dbConn.Exec(queries[i])
-
-		if err != nil {
-			fmt.Println(err.Error())
-			fmt.Printf("Error writing line %d to database\n", i)
-			os.Exit(1)
-		}
-
-		bar2.Add(1)
-	}
-
-}
-
 func main() {
 	var jsonLines []string
 	var jsonObjs []map[string]any
 	var workObjs []Work
 
-	jsonFilePath, _ := parseCommandLine()
+	jsonFilePath, dbFilePath := parseCommandLine()
+
+	// Connect to SQLite3 database and create tables
+	dbConn := connectToDatabase(dbFilePath)
+	defer dbConn.Close()
+	createDBTables(dbConn)
 
 	// Read in JSON data
 	fileTime := time.Now()
@@ -202,4 +133,8 @@ func main() {
 		workObjs = append(workObjs, obj)
 	}
 	fmt.Println("Created Work objs", time.Since(workTime))
+
+	// Write data to SQLite database
+	sqlQuery := createDBQuery(workObjs)
+	writeDataToDB(dbConn, sqlQuery)
 }
