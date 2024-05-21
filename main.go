@@ -32,58 +32,53 @@ queries to
 On error, calls _printCommandLineParsingError()
 */
 func parseCommandLine() (string, string) {
-	var oaWorksPath, dbPath string
+	var inputPath, outputPath string
 	var err error
 
-	flag.StringVar(&oaWorksPath, "i", "", "Path to OpenAlex 'Works' JSON Lines file")
-	flag.StringVar(&dbPath, "o", "", "Path to SQLite3 database")
+	flag.StringVar(&inputPath, "i", "", "Path to OpenAlex 'Works' JSON Lines file")
+	flag.StringVar(&outputPath, "o", "", "Path to SQLite3 database")
 	flag.Parse()
 
-	if oaWorksPath == "" {
+	if inputPath == "" {
 		_printCommandLineParsingError("i")
 	}
 
-	if dbPath == "" {
+	if outputPath == "" {
 		_printCommandLineParsingError("o")
 	}
 
-	absOAWorksPath, err := filepath.Abs(oaWorksPath)
+	absInputPath, err := filepath.Abs(inputPath)
 
 	if err != nil {
-		fmt.Println("Invalid input: ", oaWorksPath)
+		fmt.Println("Invalid input: ", inputPath)
 		_printCommandLineParsingError("i")
 	}
 
-	absDBPath, err := filepath.Abs(dbPath)
+	absOutputPath, err := filepath.Abs(outputPath)
 
 	if err != nil {
-		fmt.Println("Invalid input: ", dbPath)
+		fmt.Println("Invalid input: ", outputPath)
 		_printCommandLineParsingError("o")
 	}
 
-	return absOAWorksPath, absDBPath
+	return absInputPath, absOutputPath
 }
 
 func main() {
 	var jsonLines []string
 	var jsonObjs []map[string]any
-	var workObjs []Work
+	var jsonOutput Output
 
-	jsonFilePath, dbFilePath := parseCommandLine()
-
-	// Connect to SQLite3 database and create tables
-	dbConn := connectToDatabase(dbFilePath)
-	defer dbConn.Close()
-	createDBTables(dbConn)
+	inputPath, outputPath := parseCommandLine()
 
 	// Read in JSON data
 	fileTime := time.Now()
-	fmt.Println("Reading file:", filepath.Base(jsonFilePath))
-	jsonFile := openFile(jsonFilePath)
+	fmt.Println("Reading file:", filepath.Base(inputPath))
+	inputFile := openFile(inputPath)
 
 	// Concurrent process for reading a file
 	fileChannel := make(chan string, 100000)
-	go readLines(jsonFile, fileChannel)
+	go readLines(inputFile, fileChannel)
 	for {
 		line, ok := <-fileChannel
 
@@ -94,8 +89,8 @@ func main() {
 		jsonLines = append(jsonLines, line)
 	}
 
-	jsonFile.Close()
-	fmt.Println("Read file:", filepath.Base(jsonFilePath), time.Since(fileTime))
+	inputFile.Close()
+	fmt.Println("Read file:", filepath.Base(inputPath), time.Since(fileTime))
 
 	// Create JSON objs
 	jsonTime := time.Now()
@@ -130,11 +125,14 @@ func main() {
 			break
 		}
 
-		workObjs = append(workObjs, obj)
+		jsonOutput = append(jsonOutput, obj)
 	}
 	fmt.Println("Created Work objs", time.Since(workTime))
 
-	// Write data to SQLite database
-	sqlQuery := createDBQuery(workObjs)
-	writeDataToDB(dbConn, sqlQuery)
+	// Write data to JSON file
+	fmt.Println("Writing to file:", filepath.Base(outputPath))
+	outputFile := createFile(outputPath)
+	writeJSON(outputFile, jsonOutput)
+	outputFile.Close()
+	fmt.Println("Wrote to file:", filepath.Base(outputPath))
 }

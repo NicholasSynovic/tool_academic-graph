@@ -22,6 +22,8 @@ type Work struct {
 	CF_Type        string
 }
 
+type Output []Work
+
 func createJSONObjs(jsonStrings []string, channel chan map[string]any) {
 	var jsonBytes []byte
 
