@@ -162,7 +162,7 @@ data/*
 *.pickle
 *.db
 *.gml
+*.json
 
 oag_go
-*.json
 extract_json
