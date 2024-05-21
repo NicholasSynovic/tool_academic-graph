@@ -5,47 +5,44 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
-
-	"github.com/schollz/progressbar/v3"
 )
 
-func readFile(fp string) ([]string, int64) {
+func openFile(fp string) *os.File {
 	var file *os.File
 	var err error
-	var data []string
-	var lineReader *bufio.Reader
-	var bytes []byte
-	var line string
 
 	file, err = os.Open(fp)
+
 	if err != nil {
-		fmt.Println("Error reading", fp)
+		fmt.Println("Error opening:", fp)
 		os.Exit(1)
 	}
 
-	defer file.Close()
+	return file
+}
 
-	bar := progressbar.Default(-1, ("Reading lines from " + fp))
+func readLines(file *os.File) []string {
+	var data []string
 
-	lineReader = bufio.NewReader(file)
+	reader := bufio.NewReader(file)
+
 	for {
-		bytes, err = lineReader.ReadBytes('\n')
+		line, err := reader.ReadString('\n')
 
 		if err == io.EOF {
+			if len(line) > 0 {
+				data = append(data, line)
+			}
 			break
-		} else if err != nil {
-			fmt.Println("Error reading file bytes of", fp)
-			os.Exit(1)
-		} else {
-			line = string(bytes)
-			line = strings.TrimSpace(line)
-			data = append(data, line)
 		}
 
-		bar.Add(1)
+		if err != nil {
+			fmt.Println("Error reading file:", file.Name())
+			os.Exit(1)
+		}
 
+		data = append(data, line)
 	}
 
-	return data, int64(len(data))
+	return data
 }
