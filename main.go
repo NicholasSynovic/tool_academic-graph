@@ -2,30 +2,15 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/schollz/progressbar/v3"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
-
-type Work struct {
-	OA_ID          string
-	DOI            string
-	Title          string
-	Is_Paratext    bool
-	Is_Retracted   bool
-	Date_Published time.Time
-	OA_Type        string
-	CF_Type        string
-}
 
 /*
 Print common error that can occur during command line parsing if the user does
@@ -102,80 +87,6 @@ func connectToDatabase(dbPath string) *sql.DB {
 	return dbConn
 }
 
-func createJSONObjs(jsonStrings []string, barSize int64) []map[string]any {
-	var data []map[string]any
-	var jsonBytes []byte
-
-	bar := progressbar.Default(barSize, "Converting JSON strings to objects...")
-
-	for i := 0; i < len(jsonStrings); i++ {
-		var jsonObj map[string]any
-
-		jsonBytes = []byte(jsonStrings[i])
-		err := json.Unmarshal(jsonBytes, &jsonObj)
-
-		if err != nil {
-			fmt.Println("JSON decode error", i)
-			os.Exit(1)
-		}
-
-		data = append(data, jsonObj)
-
-		bar.Add(1)
-	}
-
-	return data
-}
-
-func createWorkArray(jsonObjs []map[string]any, barSize int64) []Work {
-	var data []Work
-	var jsonObj map[string]any
-
-	caser := cases.Title(language.AmericanEnglish)
-
-	bar := progressbar.Default(barSize, "Creating an array of Work objects...")
-
-	for i := 0; i < len(jsonObjs); i++ {
-		jsonObj = jsonObjs[i]
-
-		id := strings.Replace(jsonObj["id"].(string), "https://openalex.org/", "", -1)
-
-		doi, ok := jsonObj["doi"].(string)
-		if !ok {
-			bar.Add(1)
-			continue
-		}
-		doi = strings.Replace(doi, "https://doi.org/", "", -1)
-
-		title, ok := jsonObj["title"].(string)
-		if !ok {
-			bar.Add(1)
-			continue
-		}
-		title = caser.String(title)
-
-		publishedDateString, _ := jsonObj["publication_date"].(string)
-		publishedDate, _ := time.Parse("2006-01-02", publishedDateString)
-
-		workObj := Work{
-			OA_ID:          id,
-			DOI:            doi,
-			Title:          title,
-			Is_Paratext:    jsonObj["is_paratext"].(bool),
-			Is_Retracted:   jsonObj["is_retracted"].(bool),
-			Date_Published: publishedDate,
-			OA_Type:        jsonObj["type"].(string),
-			CF_Type:        jsonObj["type_crossref"].(string),
-		}
-
-		data = append(data, workObj)
-
-		bar.Add(1)
-	}
-
-	return data
-}
-
 func createTable(dbConn *sql.DB) {
 	var sqlQuery string
 	var err error
@@ -231,11 +142,23 @@ func main() {
 	jsonFilePath, _ := parseCommandLine()
 
 	// Read in JSON data
-	fmt.Println("Opening file:", filepath.Base(jsonFilePath))
+	fileTime := time.Now()
+	fmt.Println("Reading file:", filepath.Base(jsonFilePath))
 	jsonFile := openFile(jsonFilePath)
-	fmt.Println("Reading JSON strings:", filepath.Base(jsonFilePath))
 	jsonLines := readLines(jsonFile)
-	fmt.Println("Closing file:", filepath.Base(jsonFilePath))
 	jsonFile.Close()
+	fmt.Println("Read file:", filepath.Base(jsonFilePath), time.Since(fileTime))
+
+	// Create JSON objs
+	jsonTime := time.Now()
+	fmt.Println("Creating JSON objs...")
+	jsonObjs := createJSONObjs(jsonLines)
+	fmt.Println("Created JSON objs", time.Since(jsonTime))
+
+	// Create Work objs
+	workTime := time.Now()
+	fmt.Println("Converting JSON to Work objs...")
+	jsonToWorkObjs(jsonObjs)
+	fmt.Println("Created Work objs", time.Since(workTime))
 
 }
