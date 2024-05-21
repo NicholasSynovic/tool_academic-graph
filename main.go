@@ -140,6 +140,9 @@ func writeDataToDB(dbConn *sql.DB, workObjs []Work, barSize int64) {
 
 func main() {
 	var jsonLines []string
+	var jsonObjs []map[string]any
+	var workObjs []Work
+
 	jsonFilePath, _ := parseCommandLine()
 
 	// Read in JSON data
@@ -166,13 +169,37 @@ func main() {
 	// Create JSON objs
 	jsonTime := time.Now()
 	fmt.Println("Creating JSON objs...")
-	jsonObjs := createJSONObjs(jsonLines)
+
+	// Concurrent channel for converting JSON strings to JSON objs
+	jsonObjChannel := make(chan map[string]any)
+	go createJSONObjs(jsonLines, jsonObjChannel)
+	for {
+		obj, ok := <-jsonObjChannel
+
+		if !ok {
+			break
+		}
+
+		jsonObjs = append(jsonObjs, obj)
+	}
+
 	fmt.Println("Created JSON objs", time.Since(jsonTime))
 
 	// Create Work objs
 	workTime := time.Now()
 	fmt.Println("Converting JSON to Work objs...")
-	jsonToWorkObjs(jsonObjs)
-	fmt.Println("Created Work objs", time.Since(workTime))
 
+	// Concurrent channel for converting JSON objs to Work objs
+	workObjChannel := make(chan Work)
+	go jsonToWorkObjs(jsonObjs, workObjChannel)
+	for {
+		obj, ok := <-workObjChannel
+
+		if !ok {
+			break
+		}
+
+		workObjs = append(workObjs, obj)
+	}
+	fmt.Println("Created Work objs", time.Since(workTime))
 }

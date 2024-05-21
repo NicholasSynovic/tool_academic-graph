@@ -22,8 +22,7 @@ type Work struct {
 	CF_Type        string
 }
 
-func createJSONObjs(jsonStrings []string) []map[string]any {
-	var data []map[string]any
+func createJSONObjs(jsonStrings []string, channel chan map[string]any) {
 	var jsonBytes []byte
 
 	for i := 0; i < len(jsonStrings); i++ {
@@ -37,15 +36,14 @@ func createJSONObjs(jsonStrings []string) []map[string]any {
 			os.Exit(1)
 		}
 
-		data = append(data, jsonObj)
+		channel <- jsonObj
 
 	}
 
-	return data
+	close(channel)
 }
 
-func jsonToWorkObjs(jsonObjs []map[string]any) []Work {
-	var data []Work
+func jsonToWorkObjs(jsonObjs []map[string]any, channel chan Work) {
 	var jsonObj map[string]any
 
 	caser := cases.Title(language.AmericanEnglish)
@@ -81,9 +79,7 @@ func jsonToWorkObjs(jsonObjs []map[string]any) []Work {
 			CF_Type:        jsonObj["type_crossref"].(string),
 		}
 
-		data = append(data, workObj)
-
+		channel <- workObj
 	}
-
-	return data
+	close(channel)
 }
