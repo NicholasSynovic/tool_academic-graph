@@ -64,6 +64,9 @@ func parseCommandLine() (string, string) {
 	return absInputPath, absOutputPath
 }
 
+/*
+Code that is actually executed within the application
+*/
 func main() {
 	var jsonLines []string
 	var jsonObjs []map[string]any

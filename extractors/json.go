@@ -11,6 +11,12 @@ import (
 	"golang.org/x/text/language"
 )
 
+/*
+Type to represent an academic work from OpenAlex
+
+Does not include all of the descriptors provided by OpenAlex, only the most
+relevant ones for this application
+*/
 type Work struct {
 	OA_ID          string
 	DOI            string
@@ -22,8 +28,16 @@ type Work struct {
 	CF_Type        string
 }
 
+/*
+A type to store an array of works to by marshelled into a JSON formatted string
+*/
 type Output []Work
 
+/*
+Parse a string representation of a JSON object into a map[string]any object
+
+On a decode error, exit the application with code 1
+*/
 func createJSONObjs(jsonStrings []string, channel chan map[string]any) {
 	var jsonBytes []byte
 
@@ -45,6 +59,11 @@ func createJSONObjs(jsonStrings []string, channel chan map[string]any) {
 	close(channel)
 }
 
+/*
+Convert a map[string]any object into a Work object
+
+On conversion error, continue to the next iteration of the for loop
+*/
 func jsonToWorkObjs(jsonObjs []map[string]any, channel chan Work) {
 	var jsonObj map[string]any
 

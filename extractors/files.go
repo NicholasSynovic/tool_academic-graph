@@ -9,6 +9,11 @@ import (
 	"path/filepath"
 )
 
+/*
+Open a file that already exists
+
+Returns a pointer to that file
+*/
 func openFile(fp string) *os.File {
 	var file *os.File
 	var err error
@@ -23,6 +28,11 @@ func openFile(fp string) *os.File {
 	return file
 }
 
+/*
+Create a file that does not exist or empty a file that does exist
+
+Returns a pointer to that file
+*/
 func createFile(fp string) *os.File {
 	var file *os.File
 	var err error
@@ -37,6 +47,11 @@ func createFile(fp string) *os.File {
 	return file
 }
 
+/*
+Given a file, read each line in it
+
+On error, exit the application with code 1
+*/
 func readLines(file *os.File, channel chan string) {
 	reader := bufio.NewReader(file)
 
@@ -60,6 +75,9 @@ func readLines(file *os.File, channel chan string) {
 	close(channel)
 }
 
+/*
+Given an Output object, marshell it and write it to a file
+*/
 func writeJSON(file *os.File, data Output) {
 	outputJSON, _ := json.Marshal(data)
 	writer := bufio.NewWriter(file)
