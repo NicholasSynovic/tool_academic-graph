@@ -139,13 +139,27 @@ func writeDataToDB(dbConn *sql.DB, workObjs []Work, barSize int64) {
 }
 
 func main() {
+	var jsonLines []string
 	jsonFilePath, _ := parseCommandLine()
 
 	// Read in JSON data
 	fileTime := time.Now()
 	fmt.Println("Reading file:", filepath.Base(jsonFilePath))
 	jsonFile := openFile(jsonFilePath)
-	jsonLines := readLines(jsonFile)
+
+	// Concurrent process for reading a file
+	fileChannel := make(chan string, 100000)
+	go readLines(jsonFile, fileChannel)
+	for {
+		line, ok := <-fileChannel
+
+		if !ok {
+			break
+		}
+
+		jsonLines = append(jsonLines, line)
+	}
+
 	jsonFile.Close()
 	fmt.Println("Read file:", filepath.Base(jsonFilePath), time.Since(fileTime))
 

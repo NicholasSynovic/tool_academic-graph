@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 )
 
 func openFile(fp string) *os.File {
@@ -21,9 +22,7 @@ func openFile(fp string) *os.File {
 	return file
 }
 
-func readLines(file *os.File) []string {
-	var data []string
-
+func readLines(file *os.File, channel chan string) {
 	reader := bufio.NewReader(file)
 
 	for {
@@ -31,18 +30,17 @@ func readLines(file *os.File) []string {
 
 		if err == io.EOF {
 			if len(line) > 0 {
-				data = append(data, line)
+				channel <- line
 			}
 			break
 		}
 
 		if err != nil {
-			fmt.Println("Error reading file:", file.Name())
+			fmt.Println("Error reading file:", filepath.Base(file.Name()))
 			os.Exit(1)
 		}
 
-		data = append(data, line)
+		channel <- line
 	}
-
-	return data
+	close(channel)
 }
