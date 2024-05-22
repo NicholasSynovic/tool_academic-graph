@@ -83,9 +83,7 @@ Convert a map[string]any object into a Work object
 
 On conversion error, continue to the next iteration of the for loop
 */
-func jsonToWorkObjs(jsonObj chan map[string]any, outChannel chan Work) {
-	var jsonObj map[string]any
-
+func jsonToWorkObjs(inChannel chan map[string]any, outChannel chan Work) {
 	caser := cases.Title(language.AmericanEnglish)
 
 	for {
@@ -97,13 +95,13 @@ func jsonToWorkObjs(jsonObj chan map[string]any, outChannel chan Work) {
 
 		id := _cleanOAID(obj["id"].(string))
 
-		doi, ok := jsonObj["doi"].(string)
+		doi, ok := obj["doi"].(string)
 		if !ok {
 			continue
 		}
 		doi = strings.Replace(doi, "https://doi.org/", "", -1)
 
-		title, ok := jsonObj["title"].(string)
+		title, ok := obj["title"].(string)
 		if !ok {
 			continue
 		}
@@ -111,18 +109,18 @@ func jsonToWorkObjs(jsonObj chan map[string]any, outChannel chan Work) {
 		title = strings.Replace(title, "\"", "", -1)
 		title = strings.Replace(title, `"`, `\"`, -1)
 
-		publishedDateString, _ := jsonObj["publication_date"].(string)
+		publishedDateString, _ := obj["publication_date"].(string)
 		publishedDate, _ := time.Parse("2006-01-02", publishedDateString)
 
 		workObj := Work{
 			OA_ID:          id,
 			DOI:            doi,
 			Title:          title,
-			Is_Paratext:    jsonObj["is_paratext"].(bool),
-			Is_Retracted:   jsonObj["is_retracted"].(bool),
+			Is_Paratext:    obj["is_paratext"].(bool),
+			Is_Retracted:   obj["is_retracted"].(bool),
 			Date_Published: publishedDate,
-			OA_Type:        jsonObj["type"].(string),
-			CF_Type:        jsonObj["type_crossref"].(string),
+			OA_Type:        obj["type"].(string),
+			CF_Type:        obj["type_crossref"].(string),
 		}
 
 		outChannel <- workObj
