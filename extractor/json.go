@@ -83,18 +83,19 @@ Convert a map[string]any object into a Work object
 
 On conversion error, continue to the next iteration of the for loop
 */
-func jsonToWorkObjs(jsonObjs []map[string]any, channel chan Work) {
+func jsonToWorkObjs(jsonObj chan map[string]any, outChannel chan Work) {
 	var jsonObj map[string]any
 
 	caser := cases.Title(language.AmericanEnglish)
 
-	size := int64(len(jsonObjs))
-	bar := progressbar.Default(size, "Converting JSON obs to Work objs...")
+	for {
+		obj, ok := <-inChannel
 
-	for i := 0; i < len(jsonObjs); i++ {
-		jsonObj = jsonObjs[i]
+		if !ok {
+			break
+		}
 
-		id := _cleanOAID(jsonObj["id"].(string))
+		id := _cleanOAID(obj["id"].(string))
 
 		doi, ok := jsonObj["doi"].(string)
 		if !ok {
@@ -124,12 +125,9 @@ func jsonToWorkObjs(jsonObjs []map[string]any, channel chan Work) {
 			CF_Type:        jsonObj["type_crossref"].(string),
 		}
 
-		bar.Add(1)
-		channel <- workObj
+		outChannel <- workObj
 	}
-	bar.Finish()
-	bar.Exit()
-	close(channel)
+	close(outChannel)
 }
 
 /*

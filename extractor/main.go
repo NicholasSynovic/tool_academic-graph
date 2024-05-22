@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -30,6 +31,28 @@ func wrapper_WriteJSON(fp string, data interface{}) {
 	writeJSON(citesOutputFile, data)
 	citesOutputFile.Close()
 	fmt.Println("Wrote to file:", filepath.Base(fp))
+}
+
+func wrapper_HandleJSON(inChannel chan map[string]any, workChannel chan Work, citationChannel chan Citation, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	for {
+		_, ok := <-inChannel
+
+		if !ok {
+			break
+		}
+
+		// Create Work objects
+		go jsonToWorkObjs(inChannel, workChannel)
+
+		// Create Citation objects
+
+		// Write Work objects
+
+		// Write Citation objects
+
+	}
 }
 
 /*
@@ -77,13 +100,18 @@ func main() {
 	var jsonObjs []map[string]any
 	var workOutput WorkOutput
 	var citationOutput CitationOutput
-	// var wg sync.WaitGroup
+	var wg sync.WaitGroup
 
 	// Parse command line
 	inputPath, worksOutputPath, citesOutputPath, processes := parseCommandLine()
 
-	// Read in JSON data
+	// Create channels
 	fileChannel := make(chan string)
+	jsonObjChannel := make(chan map[string]any)
+	workObjChannel := make(chan Work)
+	citationObjChannel := make(chan Citation)
+
+	// Read in JSON data
 	inputFile := openFile(inputPath)
 	defer inputFile.Close()
 	go readLines(inputFile, fileChannel)
@@ -92,39 +120,17 @@ func main() {
 		Create JSON objs
 		Concurrent channel for converting JSON strings to JSON objs
 	*/
-	jsonObjChannel := make(chan map[string]any)
+	for i := 0; i < processes; i++ {
+		wg.Add(1)
+		go wrapper_HandleJSON(jsonObjChannel, workObjChannel, citationObjChannel, &wg)
+	}
+
 	go createJSONObjs(fileChannel, jsonObjChannel)
-	for {
-		obj, ok := <-jsonObjChannel
-
-		if !ok {
-			break
-		}
-
-		jsonObjs = append(jsonObjs, obj)
-	}
-
-	/*
-		Create Work objs
-		Concurrent channel for converting JSON objs to Work objs
-	*/
-	workObjChannel := make(chan Work)
-	go jsonToWorkObjs(jsonObjs, workObjChannel)
-	for {
-		workObj, ok := <-workObjChannel
-
-		if !ok {
-			break
-		}
-
-		workOutput = append(workOutput, workObj)
-	}
 
 	/*
 		Create Citation objs
 		Concurrent channel for converting JSON objs to Citation objs
 	*/
-	citationObjChannel := make(chan Citation)
 	go jsonToCitationObjs(jsonObjs, citationObjChannel)
 	for {
 		citationObj, ok := <-citationObjChannel
