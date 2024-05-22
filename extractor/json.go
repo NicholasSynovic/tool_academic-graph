@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -52,34 +51,31 @@ func _cleanOAID(oa_id string) string {
 }
 
 /*
-Parse a string representation of a JSON object into a map[string]any object
+Parse a string representation of a JSON object into a map[string]any object and
+pipe into a channel
 
-On a decode error, exit the application with code 1
+On a decode error, break loop and close outChannel
 */
-func createJSONObjs(jsonStrings []string, channel chan map[string]any) {
-	var jsonBytes []byte
+func createJSONObjs(inChannel chan string, outChannel chan map[string]any) {
+	for {
+		jsonString, ok := <-inChannel
 
-	size := int64(len(jsonStrings))
-	bar := progressbar.Default(size, "Converting JSON strings to JSON objs...")
-
-	for i := int64(0); i < size; i++ {
-		var jsonObj map[string]any
-
-		jsonBytes = []byte(jsonStrings[i])
-		err := json.Unmarshal(jsonBytes, &jsonObj)
-
-		if err != nil {
-			fmt.Println("JSON decode error", i)
-			os.Exit(1)
+		if !ok {
+			break
 		}
 
-		bar.Add(1)
-		channel <- jsonObj
+		var jsonObj map[string]any
+		err := json.Unmarshal([]byte(jsonString), &jsonObj)
 
+		if err != nil {
+			fmt.Println(err, jsonString)
+			break
+		}
+
+		outChannel <- jsonObj
 	}
-	bar.Finish()
-	bar.Exit()
-	close(channel)
+
+	close(outChannel)
 }
 
 /*
