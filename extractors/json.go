@@ -29,9 +29,26 @@ type Work struct {
 }
 
 /*
+Type to represent the citations of an academic work
+*/
+type Citation struct {
+	Work_OA_ID string
+	Ref_OA_ID  string
+}
+
+/*
 A type to store an array of works to by marshelled into a JSON formatted string
 */
-type Output []Work
+type CitationOutput []Citation
+
+/*
+A type to store an array of works to by marshelled into a JSON formatted string
+*/
+type WorkOutput []Work
+
+func _cleanOAID(oa_id string) string {
+	return strings.Replace(oa_id, "https://openalex.org/", "", -1)
+}
 
 /*
 Parse a string representation of a JSON object into a map[string]any object
@@ -72,7 +89,7 @@ func jsonToWorkObjs(jsonObjs []map[string]any, channel chan Work) {
 	for i := 0; i < len(jsonObjs); i++ {
 		jsonObj = jsonObjs[i]
 
-		id := strings.Replace(jsonObj["id"].(string), "https://openalex.org/", "", -1)
+		id := _cleanOAID(jsonObj["id"].(string))
 
 		doi, ok := jsonObj["doi"].(string)
 		if !ok {
@@ -103,6 +120,35 @@ func jsonToWorkObjs(jsonObjs []map[string]any, channel chan Work) {
 		}
 
 		channel <- workObj
+	}
+	close(channel)
+}
+
+/*
+Convert a map[string]any object into a Work object
+
+On conversion error, continue to the next iteration of the for loop
+*/
+func jsonToCitationObjs(jsonObjs []map[string]any, channel chan Citation) {
+	var jsonObj map[string]any
+
+	for i := 0; i < len(jsonObjs); i++ {
+		jsonObj = jsonObjs[i]
+
+		id := _cleanOAID(jsonObj["id"].(string))
+
+		refs := jsonObj["referenced_works"].([]interface{})
+
+		for idx := range refs {
+			refID := _cleanOAID(refs[idx].(string))
+
+			citationObj := Citation{
+				Work_OA_ID: id,
+				Ref_OA_ID:  refID,
+			}
+			channel <- citationObj
+
+		}
 	}
 	close(channel)
 }

@@ -78,8 +78,8 @@ func readLines(file *os.File, channel chan string) {
 /*
 Given an Output object, marshell it and write it to a file
 */
-func writeJSON(file *os.File, data Output) {
-	outputJSON, _ := json.Marshal(data)
+func writeJSON(file *os.File, data interface{}) {
+	outputJSON, _ := json.MarshalIndent(data, "", "    ")
 	writer := bufio.NewWriter(file)
 	writer.Write(outputJSON)
 }

@@ -23,6 +23,17 @@ func _printCommandLineParsingError(parameter string) {
 }
 
 /*
+Wraps around the writeJSON() function to provide output to the command line
+*/
+func wrapper_WriteJSON(fp string, data interface{}) {
+	fmt.Println("Writing to file:", filepath.Base(fp))
+	citesOutputFile := createFile(fp)
+	writeJSON(citesOutputFile, data)
+	citesOutputFile.Close()
+	fmt.Println("Wrote to file:", filepath.Base(fp))
+}
+
+/*
 Parse the command line for relevant program flags
 
 Returns (string, string) where the first string is the absolute path of a
@@ -31,37 +42,31 @@ queries to
 
 On error, calls _printCommandLineParsingError()
 */
-func parseCommandLine() (string, string) {
-	var inputPath, outputPath string
-	var err error
+func parseCommandLine() (string, string, string) {
+	var inputPath, worksOutputPath, citesOutputPath string
 
 	flag.StringVar(&inputPath, "i", "", `Path to OpenAlex "Works" JSON Lines file`)
-	flag.StringVar(&outputPath, "o", "", "Path to output JSON file")
+	flag.StringVar(&worksOutputPath, "works-output", "", "Path to output JSON file to store Works information")
+	flag.StringVar(&citesOutputPath, "cites-output", "", "Path to output JSON file to store Citation relationship information")
 	flag.Parse()
 
 	if inputPath == "" {
 		_printCommandLineParsingError("i")
 	}
 
-	if outputPath == "" {
-		_printCommandLineParsingError("o")
+	if worksOutputPath == "" {
+		_printCommandLineParsingError("works-output")
 	}
 
-	absInputPath, err := filepath.Abs(inputPath)
-
-	if err != nil {
-		fmt.Println("Invalid input: ", inputPath)
-		_printCommandLineParsingError("i")
+	if citesOutputPath == "" {
+		_printCommandLineParsingError("cites-output")
 	}
 
-	absOutputPath, err := filepath.Abs(outputPath)
+	absInputPath, _ := filepath.Abs(inputPath)
+	absWorksOutputPath, _ := filepath.Abs(worksOutputPath)
+	absCitesOutputPath, _ := filepath.Abs(citesOutputPath)
 
-	if err != nil {
-		fmt.Println("Invalid input: ", outputPath)
-		_printCommandLineParsingError("o")
-	}
-
-	return absInputPath, absOutputPath
+	return absInputPath, absWorksOutputPath, absCitesOutputPath
 }
 
 /*
@@ -70,9 +75,10 @@ Code that is actually executed within the application
 func main() {
 	var jsonLines []string
 	var jsonObjs []map[string]any
-	var jsonOutput Output
+	var workOutput WorkOutput
+	var citationOutput CitationOutput
 
-	inputPath, outputPath := parseCommandLine()
+	inputPath, worksOutputPath, citesOutputPath := parseCommandLine()
 
 	// Read in JSON data
 	fileTime := time.Now()
@@ -80,7 +86,7 @@ func main() {
 	inputFile := openFile(inputPath)
 
 	// Concurrent process for reading a file
-	fileChannel := make(chan string, 100000)
+	fileChannel := make(chan string)
 	go readLines(inputFile, fileChannel)
 	for {
 		line, ok := <-fileChannel
@@ -122,20 +128,38 @@ func main() {
 	workObjChannel := make(chan Work)
 	go jsonToWorkObjs(jsonObjs, workObjChannel)
 	for {
-		obj, ok := <-workObjChannel
+		workObj, ok := <-workObjChannel
 
 		if !ok {
 			break
 		}
 
-		jsonOutput = append(jsonOutput, obj)
+		workOutput = append(workOutput, workObj)
 	}
 	fmt.Println("Created Work objs", time.Since(workTime))
 
-	// Write data to JSON file
-	fmt.Println("Writing to file:", filepath.Base(outputPath))
-	outputFile := createFile(outputPath)
-	writeJSON(outputFile, jsonOutput)
-	outputFile.Close()
-	fmt.Println("Wrote to file:", filepath.Base(outputPath))
+	// Create Citation objs
+	citationTime := time.Now()
+	fmt.Println("Converting JSON to Citation objs...")
+
+	// Concurrent channel for converting JSON objs to Citation objs
+	citationObjChannel := make(chan Citation)
+	go jsonToCitationObjs(jsonObjs, citationObjChannel)
+	for {
+		citationObj, ok := <-citationObjChannel
+
+		if !ok {
+			break
+		}
+
+		citationOutput = append(citationOutput, citationObj)
+	}
+	fmt.Println("Created Citation objs", time.Since(citationTime))
+
+	// Write Works data to JSON file
+	wrapper_WriteJSON(worksOutputPath, workOutput)
+
+	// Write Citation data to JSON file
+	wrapper_WriteJSON(citesOutputPath, citationOutput)
+
 }
