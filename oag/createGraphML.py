@@ -107,7 +107,9 @@ def main(dbPath: Path, graphMLPath: Path) -> None:
 
     print("Reading works table...")
     worksDF: DataFrame = pandas.read_sql_table(
-        table_name="works", con=dbConn, columns=["oa_id"]
+        table_name="works",
+        con=dbConn,
+        columns=["oa_id"],
     )
     print("Read works table")
 

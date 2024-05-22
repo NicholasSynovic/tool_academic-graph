@@ -166,3 +166,4 @@ data/*
 
 oag_go
 extract_json
+graphml-generator
