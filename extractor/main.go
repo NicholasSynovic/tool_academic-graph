@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
+	"runtime"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -41,12 +41,14 @@ queries to
 
 On error, calls _printCommandLineParsingError()
 */
-func parseCommandLine() (string, string, string) {
+func parseCommandLine() (string, string, string, int) {
 	var inputPath, worksOutputPath, citesOutputPath string
+	var processes int
 
 	flag.StringVar(&inputPath, "i", "", `Path to OpenAlex "Works" JSON Lines file`)
 	flag.StringVar(&worksOutputPath, "works-output", "", "Path to output JSON file to store Works information")
 	flag.StringVar(&citesOutputPath, "cites-output", "", "Path to output JSON file to store Citation relationship information")
+	flag.IntVar(&processes, "proc", runtime.NumCPU(), "Number of processors to use")
 	flag.Parse()
 
 	if inputPath == "" {
@@ -65,47 +67,33 @@ func parseCommandLine() (string, string, string) {
 	absWorksOutputPath, _ := filepath.Abs(worksOutputPath)
 	absCitesOutputPath, _ := filepath.Abs(citesOutputPath)
 
-	return absInputPath, absWorksOutputPath, absCitesOutputPath
+	return absInputPath, absWorksOutputPath, absCitesOutputPath, processes
 }
 
 /*
 Code that is actually executed within the application
 */
 func main() {
-	var jsonLines []string
 	var jsonObjs []map[string]any
 	var workOutput WorkOutput
 	var citationOutput CitationOutput
+	// var wg sync.WaitGroup
 
-	inputPath, worksOutputPath, citesOutputPath := parseCommandLine()
+	// Parse command line
+	inputPath, worksOutputPath, citesOutputPath, processes := parseCommandLine()
 
 	// Read in JSON data
-	fileTime := time.Now()
-	fmt.Println("Reading file:", filepath.Base(inputPath))
-	inputFile := openFile(inputPath)
-
-	// Concurrent process for reading a file
 	fileChannel := make(chan string)
+	inputFile := openFile(inputPath)
+	defer inputFile.Close()
 	go readLines(inputFile, fileChannel)
-	for {
-		line, ok := <-fileChannel
-
-		if !ok {
-			break
-		}
-
-		jsonLines = append(jsonLines, line)
-	}
-
-	inputFile.Close()
-	fmt.Println("Read file:", filepath.Base(inputPath), time.Since(fileTime))
 
 	/*
 		Create JSON objs
 		Concurrent channel for converting JSON strings to JSON objs
 	*/
 	jsonObjChannel := make(chan map[string]any)
-	go createJSONObjs(jsonLines, jsonObjChannel)
+	go createJSONObjs(fileChannel, jsonObjChannel)
 	for {
 		obj, ok := <-jsonObjChannel
 
