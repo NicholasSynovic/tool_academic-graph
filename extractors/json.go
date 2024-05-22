@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/schollz/progressbar/v3"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -58,7 +59,10 @@ On a decode error, exit the application with code 1
 func createJSONObjs(jsonStrings []string, channel chan map[string]any) {
 	var jsonBytes []byte
 
-	for i := 0; i < len(jsonStrings); i++ {
+	size := int64(len(jsonStrings))
+	bar := progressbar.Default(size, "Converting JSON strings to JSON objs...")
+
+	for i := int64(0); i < size; i++ {
 		var jsonObj map[string]any
 
 		jsonBytes = []byte(jsonStrings[i])
@@ -69,10 +73,12 @@ func createJSONObjs(jsonStrings []string, channel chan map[string]any) {
 			os.Exit(1)
 		}
 
+		bar.Add(1)
 		channel <- jsonObj
 
 	}
-
+	bar.Finish()
+	bar.Exit()
 	close(channel)
 }
 
@@ -85,6 +91,9 @@ func jsonToWorkObjs(jsonObjs []map[string]any, channel chan Work) {
 	var jsonObj map[string]any
 
 	caser := cases.Title(language.AmericanEnglish)
+
+	size := int64(len(jsonObjs))
+	bar := progressbar.Default(size, "Converting JSON obs to Work objs...")
 
 	for i := 0; i < len(jsonObjs); i++ {
 		jsonObj = jsonObjs[i]
@@ -119,8 +128,11 @@ func jsonToWorkObjs(jsonObjs []map[string]any, channel chan Work) {
 			CF_Type:        jsonObj["type_crossref"].(string),
 		}
 
+		bar.Add(1)
 		channel <- workObj
 	}
+	bar.Finish()
+	bar.Exit()
 	close(channel)
 }
 
@@ -132,12 +144,16 @@ On conversion error, continue to the next iteration of the for loop
 func jsonToCitationObjs(jsonObjs []map[string]any, channel chan Citation) {
 	var jsonObj map[string]any
 
+	size := int64(len(jsonObjs))
+	bar := progressbar.Default(size, "Converting JSON obs to Citation objs...")
+
 	for i := 0; i < len(jsonObjs); i++ {
 		jsonObj = jsonObjs[i]
 
 		id := _cleanOAID(jsonObj["id"].(string))
 
 		refs := jsonObj["referenced_works"].([]interface{})
+		bar.ChangeMax(bar.GetMax() + len(refs))
 
 		for idx := range refs {
 			refID := _cleanOAID(refs[idx].(string))
@@ -146,9 +162,13 @@ func jsonToCitationObjs(jsonObjs []map[string]any, channel chan Citation) {
 				Work_OA_ID: id,
 				Ref_OA_ID:  refID,
 			}
+
+			bar.Add(1)
 			channel <- citationObj
 
 		}
 	}
+	bar.Finish()
+	bar.Exit()
 	close(channel)
 }

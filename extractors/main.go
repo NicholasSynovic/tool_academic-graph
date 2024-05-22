@@ -26,7 +26,6 @@ func _printCommandLineParsingError(parameter string) {
 Wraps around the writeJSON() function to provide output to the command line
 */
 func wrapper_WriteJSON(fp string, data interface{}) {
-	fmt.Println("Writing to file:", filepath.Base(fp))
 	citesOutputFile := createFile(fp)
 	writeJSON(citesOutputFile, data)
 	citesOutputFile.Close()
@@ -101,11 +100,10 @@ func main() {
 	inputFile.Close()
 	fmt.Println("Read file:", filepath.Base(inputPath), time.Since(fileTime))
 
-	// Create JSON objs
-	jsonTime := time.Now()
-	fmt.Println("Creating JSON objs...")
-
-	// Concurrent channel for converting JSON strings to JSON objs
+	/*
+		Create JSON objs
+		Concurrent channel for converting JSON strings to JSON objs
+	*/
 	jsonObjChannel := make(chan map[string]any)
 	go createJSONObjs(jsonLines, jsonObjChannel)
 	for {
@@ -118,13 +116,10 @@ func main() {
 		jsonObjs = append(jsonObjs, obj)
 	}
 
-	fmt.Println("Created JSON objs", time.Since(jsonTime))
-
-	// Create Work objs
-	workTime := time.Now()
-	fmt.Println("Converting JSON to Work objs...")
-
-	// Concurrent channel for converting JSON objs to Work objs
+	/*
+		Create Work objs
+		Concurrent channel for converting JSON objs to Work objs
+	*/
 	workObjChannel := make(chan Work)
 	go jsonToWorkObjs(jsonObjs, workObjChannel)
 	for {
@@ -136,13 +131,11 @@ func main() {
 
 		workOutput = append(workOutput, workObj)
 	}
-	fmt.Println("Created Work objs", time.Since(workTime))
 
-	// Create Citation objs
-	citationTime := time.Now()
-	fmt.Println("Converting JSON to Citation objs...")
-
-	// Concurrent channel for converting JSON objs to Citation objs
+	/*
+		Create Citation objs
+		Concurrent channel for converting JSON objs to Citation objs
+	*/
 	citationObjChannel := make(chan Citation)
 	go jsonToCitationObjs(jsonObjs, citationObjChannel)
 	for {
@@ -154,7 +147,6 @@ func main() {
 
 		citationOutput = append(citationOutput, citationObj)
 	}
-	fmt.Println("Created Citation objs", time.Since(citationTime))
 
 	// Write Works data to JSON file
 	wrapper_WriteJSON(worksOutputPath, workOutput)
