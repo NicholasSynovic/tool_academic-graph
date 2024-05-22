@@ -4,7 +4,8 @@ import click
 import pandas
 from pandas import DataFrame
 from pyfs import isFile, resolvePath
-from sqlalchemy import Engine
+from sqlalchemy import Engine, text
+from sqlalchemy.exc import IntegrityError
 
 from oag.sqlite import createDBConnection
 from oag.sqlite.db import DB
@@ -17,14 +18,37 @@ def readWrite(
     dbConn: Engine,
     dbTable: str,
     index: bool = False,
+    updateDFIndex: bool = False,
 ) -> None:
     print(f"Reading: ", fp.name)
     df: DataFrame = pandas.read_json(path_or_buf=fp)
     df.rename(columns=columns, inplace=True)
     df.columns = df.columns.str.lower()
 
+    if updateDFIndex:
+        print(f"Updating index to support database table {dbTable}...")
+        sqlQuery: str = f"SELECT id FROM {dbTable} ORDER BY id DESC LIMIT 1"
+        offset: int
+        try:
+            offset = dbConn.connect().execute(text(text=sqlQuery)).fetchall()[0]
+        except IndexError:
+            offset = 0
+
+        df.index = df.index + offset + 1
+
     print(f"Writing to: ", dbPath.name)
-    df.to_sql(name=dbTable, con=dbConn, if_exists="append", index=index)
+
+    try:
+        df.to_sql(
+            name=dbTable,
+            con=dbConn,
+            if_exists="append",
+            index=index,
+            index_label="id",
+        )
+    except IntegrityError:
+        print("Cannot write to database: IntegrityError")
+        quit(1)
 
 
 @click.command()
@@ -90,6 +114,7 @@ def main(worksFP: Path, citesFP: Path, outputFP: Path) -> None:
         dbConn=dbConn,
         dbTable="cites",
         index=True,
+        updateDFIndex=True,
     )
 
 
