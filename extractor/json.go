@@ -35,16 +35,6 @@ type Citation struct {
 	Ref_OA_ID  string
 }
 
-/*
-A type to store an array of works to by marshelled into a JSON formatted string
-*/
-type CitationOutput []Citation
-
-/*
-A type to store an array of works to by marshelled into a JSON formatted string
-*/
-type WorkOutput []Work
-
 func _cleanOAID(oa_id string) string {
 	return strings.Replace(oa_id, "https://openalex.org/", "", -1)
 }
@@ -55,19 +45,19 @@ pipe into a channel
 
 On a decode error, break loop and close outChannel
 */
-func createJSONObjs(data []string, outChannel chan map[string]any) {
-	for i := range data {
+func createJSONObjs(inChannel chan string, outChannel chan map[string]any) {
+
+	for data := range inChannel {
 		var jsonObj map[string]any
-		err := json.Unmarshal([]byte(data[i]), &jsonObj)
+		err := json.Unmarshal([]byte(data), &jsonObj)
 
 		if err != nil {
-			fmt.Println(err, data[i])
+			fmt.Println(err, data)
 			break
 		}
 
 		outChannel <- jsonObj
 	}
-
 	close(outChannel)
 }
 
@@ -76,40 +66,43 @@ Convert a map[string]any object into a Work object
 
 On conversion error, continue to the next iteration of the for loop
 */
-func jsonToWorkObj(obj map[string]any, outChannel chan Work) {
-	caser := cases.Title(language.AmericanEnglish)
+func jsonToWorkObj(inChannel chan map[string]any, outChannel chan Work) {
+	for data := range inChannel {
+		caser := cases.Title(language.AmericanEnglish)
 
-	id := _cleanOAID(obj["id"].(string))
+		id := _cleanOAID(data["id"].(string))
 
-	doi, ok := obj["doi"].(string)
-	if !ok {
-		return
+		doi, ok := data["doi"].(string)
+		if !ok {
+			doi = "!error"
+		}
+		doi = strings.Replace(doi, "https://doi.org/", "", -1)
+
+		title, ok := data["title"].(string)
+		if !ok {
+			title = "!error"
+
+		}
+		title = caser.String(title)
+		title = strings.Replace(title, "\"", "", -1)
+		title = strings.Replace(title, `"`, `\"`, -1)
+
+		publishedDateString, _ := data["publication_date"].(string)
+		publishedDate, _ := time.Parse("2006-01-02", publishedDateString)
+
+		workObj := Work{
+			OA_ID:          id,
+			DOI:            doi,
+			Title:          title,
+			Is_Paratext:    data["is_paratext"].(bool),
+			Is_Retracted:   data["is_retracted"].(bool),
+			Date_Published: publishedDate,
+			OA_Type:        data["type"].(string),
+			CF_Type:        data["type_crossref"].(string),
+		}
+		outChannel <- workObj
 	}
-	doi = strings.Replace(doi, "https://doi.org/", "", -1)
-
-	title, ok := obj["title"].(string)
-	if !ok {
-		return
-	}
-	title = caser.String(title)
-	title = strings.Replace(title, "\"", "", -1)
-	title = strings.Replace(title, `"`, `\"`, -1)
-
-	publishedDateString, _ := obj["publication_date"].(string)
-	publishedDate, _ := time.Parse("2006-01-02", publishedDateString)
-
-	workObj := Work{
-		OA_ID:          id,
-		DOI:            doi,
-		Title:          title,
-		Is_Paratext:    obj["is_paratext"].(bool),
-		Is_Retracted:   obj["is_retracted"].(bool),
-		Date_Published: publishedDate,
-		OA_Type:        obj["type"].(string),
-		CF_Type:        obj["type_crossref"].(string),
-	}
-
-	outChannel <- workObj
+	close(outChannel)
 }
 
 /*

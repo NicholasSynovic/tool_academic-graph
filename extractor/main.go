@@ -3,9 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
 	"path/filepath"
-	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/schollz/progressbar/v3"
@@ -24,28 +22,6 @@ func wrapper_WriteJSON(fp string, data interface{}) {
 	writeJSON(citesOutputFile, data)
 	citesOutputFile.Close()
 	fmt.Println("Wrote to file:", filepath.Base(fp))
-}
-
-func wrapper_HandleJSON(inChannel chan map[string]any, workChannel chan Work, citationChannel chan Citation, processes int, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	bar := progressbar.Default(-1, "Creating objects...")
-	// TODO: Make sure that we are not coupling/ involving states on obj
-	for {
-		obj, ok := <-inChannel
-
-		if !ok {
-			break
-		}
-
-		// Create Work objects
-		go jsonToWorkObj(obj, workChannel)
-
-		// Create Citation objects
-		go jsonToCitationObj(obj, citationChannel)
-
-		bar.Add(processes)
-	}
 }
 
 /*
@@ -72,48 +48,54 @@ func parseCommandLine() AppConfig {
 	return config
 }
 
-func main() {
-	var workOutput WorkOutput
-	var citationOutput CitationOutput
-	var wg sync.WaitGroup
+func writeJSONToFile(fp string, inChannel chan interface{}) {
+	var output []interface{}
 
+	citesOutputFile := createFile(fp)
+	defer citesOutputFile.Close()
+
+	bar := progressbar.Default(-1, "Writing data...")
+
+	for {
+		data, ok := <-inChannel
+
+		if !ok {
+			break
+		}
+
+		output = append(output, data)
+		bar.Add(1)
+	}
+
+	writeJSON(citesOutputFile, output)
+	fmt.Println("Wrote to file:", filepath.Base(fp))
+
+}
+
+func main() {
 	// Parse command line
 	config := parseCommandLine()
 
 	// Create channels
+	jsonLinesChannel := make(chan string)
 	jsonObjChannel := make(chan map[string]any)
 	workObjChannel := make(chan Work)
 	citationObjChannel := make(chan Citation)
 
-	// Read in JSON data
+	// Read in JSON data to channel
 	inputFile := openFile(config.inputPath)
-	jsonLines := readLines(inputFile)
-	inputFile.Close()
+	// defer inputFile.Close()
+	go readLines(inputFile, jsonLinesChannel)
 
-	/*
-		Create JSON objs
-		Concurrent channel for converting JSON strings to JSON objs
-	*/
-	for i := 0; i < config.processes; i++ {
-		wg.Add(1)
-		go wrapper_HandleJSON(jsonObjChannel, workObjChannel, citationObjChannel, config.processes, &wg)
-	}
+	// Create JSON objs
+	go createJSONObjs(jsonLinesChannel, jsonObjChannel)
 
-	go createJSONObjs(jsonLines, jsonObjChannel)
+	// Create Work objs
+	go jsonToWorkObj(jsonObjChannel, workObjChannel)
 
-	wg.Wait()
+	// Write Work objs to file
+	go writeJSONToFile(config.worksOutputPath, workObjChannel)
 
-	os.Exit(1)
-
-	/*
-		Create Citation objs
-		Concurrent channel for converting JSON objs to Citation objs
-	*/
-
-	// Write Works data to JSON file
-	wrapper_WriteJSON(config.worksOutputPath, workOutput)
-
-	// Write Citation data to JSON file
-	wrapper_WriteJSON(config.citesOutputPath, citationOutput)
-
+	// Write Citations objs to file
+	go writeJSONToFile(config.worksOutputPath, workObjChannel)
 }

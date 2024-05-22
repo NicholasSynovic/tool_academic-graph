@@ -7,8 +7,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-
-	"github.com/schollz/progressbar/v3"
 )
 
 /*
@@ -54,11 +52,8 @@ Given a file, read each line in it
 
 On error, exit the application with code 1
 */
-func readLines(file *os.File) []string {
-	data := []string{}
-
-	bar := progressbar.Default(-1, "Reading", filepath.Base(file.Name()))
-
+func readLines(file *os.File, outChannel chan string) {
+	defer close(outChannel)
 	reader := bufio.NewReader(file)
 
 	for {
@@ -66,22 +61,18 @@ func readLines(file *os.File) []string {
 
 		if err == io.EOF {
 			if len(line) > 0 {
-				data = append(data, line)
-				bar.Add(1)
+				outChannel <- line
 			}
 			break
 		}
 
 		if err != nil {
-			fmt.Println("Error reading file:", filepath.Base(file.Name()))
-			os.Exit(1)
+			fmt.Println("Error reading file:", filepath.Base(file.Name()), err)
+			break
 		}
 
-		data = append(data, line)
-		bar.Add(1)
+		outChannel <- line
 	}
-	bar.Exit()
-	return data
 }
 
 /*
