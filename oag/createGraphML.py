@@ -1,3 +1,4 @@
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from itertools import count
 from pathlib import Path
 from re import search
@@ -30,19 +31,24 @@ def buildXML(
 
     nodeMapping: dict[str, str] = {}
 
-    with Bar("Adding nodes and edges...", max=nodesDF.shape[0]) as bar:
-        row: Tuple[Hashable, Series]
-        for row in nodesDF.iterrows():
-            node: Element = etree.SubElement(graphNode, "node")
-            oaID: Element = etree.SubElement(node, "data")
+    with Bar("Adding nodes...", max=nodesDF.shape[0]) as bar:
+        with ThreadPoolExecutor() as executor:
 
-            nm: str = f"n{row[0]}"
-            nodeMapping[row[1]["oa_id"]] = nm
+            def _run(row: Tuple[Hashable, Series]) -> None:
+                node: Element = etree.SubElement(graphNode, "node")
+                oaID: Element = etree.SubElement(node, "data")
 
-            node.set("id", nm)
-            oaID.set("key", "oa_id")
-            oaID.text = row[1]["oa_id"]
-            bar.next()
+                nm: str = f"n{row[0]}"
+                nodeMapping[row[1]["oa_id"]] = nm
+
+                node.set("id", nm)
+                oaID.set("key", "oa_id")
+                oaID.text = row[1]["oa_id"]
+                bar.next()
+
+            executor.map(_run, nodesDF.iterrows())
+            bar.finish()
+            bar.update()
 
     with Bar("Adding edges...", max=edgesDF.shape[0]) as bar:
         row: Tuple[Hashable, Series]
@@ -100,7 +106,9 @@ def main(dbPath: Path, graphMLPath: Path) -> None:
     db: DB = DB(dbConn=dbConn)
 
     print("Reading works table...")
-    worksDF: DataFrame = pandas.read_sql_table(table_name="works", con=dbConn)
+    worksDF: DataFrame = pandas.read_sql_table(
+        table_name="works", con=dbConn, columns=["oa_id"]
+    )
     print("Read works table")
 
     print("Reading cites table...")
