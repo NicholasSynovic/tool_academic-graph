@@ -54,7 +54,9 @@ Given a file, read each line in it
 
 On error, exit the application with code 1
 */
-func readLines(file *os.File, channel chan string) {
+func readLines(file *os.File) []string {
+	data := []string{}
+
 	bar := progressbar.Default(-1, "Reading", filepath.Base(file.Name()))
 
 	reader := bufio.NewReader(file)
@@ -64,7 +66,8 @@ func readLines(file *os.File, channel chan string) {
 
 		if err == io.EOF {
 			if len(line) > 0 {
-				channel <- line
+				data = append(data, line)
+				bar.Add(1)
 			}
 			break
 		}
@@ -74,10 +77,11 @@ func readLines(file *os.File, channel chan string) {
 			os.Exit(1)
 		}
 
-		channel <- line
+		data = append(data, line)
 		bar.Add(1)
 	}
-	close(channel)
+	bar.Exit()
+	return data
 }
 
 /*

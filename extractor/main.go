@@ -5,22 +5,15 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/schollz/progressbar/v3"
 )
 
-/*
-Print common error that can occur during command line parsing if the user does
-not input the required flags
-
-Does not return anything and exits with code 1
-*/
-func _printCommandLineParsingError(parameter string) {
-	var errorString string = "-%s is required\n"
-	fmt.Printf(errorString, parameter)
-	os.Exit(1)
+type AppConfig struct {
+	inputPath, worksOutputPath, citesOutputPath string
+	processes                                   int
 }
 
 /*
@@ -33,25 +26,25 @@ func wrapper_WriteJSON(fp string, data interface{}) {
 	fmt.Println("Wrote to file:", filepath.Base(fp))
 }
 
-func wrapper_HandleJSON(inChannel chan map[string]any, workChannel chan Work, citationChannel chan Citation, wg *sync.WaitGroup) {
+func wrapper_HandleJSON(inChannel chan map[string]any, workChannel chan Work, citationChannel chan Citation, processes int, wg *sync.WaitGroup) {
 	defer wg.Done()
 
+	bar := progressbar.Default(-1, "Creating objects...")
+	// TODO: Make sure that we are not coupling/ involving states on obj
 	for {
-		_, ok := <-inChannel
+		obj, ok := <-inChannel
 
 		if !ok {
 			break
 		}
 
 		// Create Work objects
-		go jsonToWorkObjs(inChannel, workChannel)
+		go jsonToWorkObj(obj, workChannel)
 
 		// Create Citation objects
+		go jsonToCitationObj(obj, citationChannel)
 
-		// Write Work objects
-
-		// Write Citation objects
-
+		bar.Add(processes)
 	}
 }
 
@@ -64,88 +57,63 @@ queries to
 
 On error, calls _printCommandLineParsingError()
 */
-func parseCommandLine() (string, string, string, int) {
-	var inputPath, worksOutputPath, citesOutputPath string
-	var processes int
+func parseCommandLine() AppConfig {
+	config := AppConfig{inputPath: "works.json", worksOutputPath: "works_output.json", citesOutputPath: "citations_output.json", processes: 1}
 
-	flag.StringVar(&inputPath, "i", "", `Path to OpenAlex "Works" JSON Lines file`)
-	flag.StringVar(&worksOutputPath, "works-output", "", "Path to output JSON file to store Works information")
-	flag.StringVar(&citesOutputPath, "cites-output", "", "Path to output JSON file to store Citation relationship information")
-	flag.IntVar(&processes, "proc", runtime.NumCPU(), "Number of processors to use")
+	flag.StringVar(&config.inputPath, "i", config.inputPath, `Path to OpenAlex "Works" JSON Lines file`)
+
+	flag.StringVar(&config.worksOutputPath, "works-output", config.worksOutputPath, "Path to output JSON file to store Works information")
+
+	flag.StringVar(&config.citesOutputPath, "cites-output", config.citesOutputPath, "Path to output JSON file to store Citation relationship information")
+
+	flag.IntVar(&config.processes, "proc", config.processes, "Number of processors to use")
 	flag.Parse()
 
-	if inputPath == "" {
-		_printCommandLineParsingError("i")
-	}
-
-	if worksOutputPath == "" {
-		_printCommandLineParsingError("works-output")
-	}
-
-	if citesOutputPath == "" {
-		_printCommandLineParsingError("cites-output")
-	}
-
-	absInputPath, _ := filepath.Abs(inputPath)
-	absWorksOutputPath, _ := filepath.Abs(worksOutputPath)
-	absCitesOutputPath, _ := filepath.Abs(citesOutputPath)
-
-	return absInputPath, absWorksOutputPath, absCitesOutputPath, processes
+	return config
 }
 
-/*
-Code that is actually executed within the application
-*/
 func main() {
-	var jsonObjs []map[string]any
 	var workOutput WorkOutput
 	var citationOutput CitationOutput
 	var wg sync.WaitGroup
 
 	// Parse command line
-	inputPath, worksOutputPath, citesOutputPath, processes := parseCommandLine()
+	config := parseCommandLine()
 
 	// Create channels
-	fileChannel := make(chan string)
 	jsonObjChannel := make(chan map[string]any)
 	workObjChannel := make(chan Work)
 	citationObjChannel := make(chan Citation)
 
 	// Read in JSON data
-	inputFile := openFile(inputPath)
-	defer inputFile.Close()
-	go readLines(inputFile, fileChannel)
+	inputFile := openFile(config.inputPath)
+	jsonLines := readLines(inputFile)
+	inputFile.Close()
 
 	/*
 		Create JSON objs
 		Concurrent channel for converting JSON strings to JSON objs
 	*/
-	for i := 0; i < processes; i++ {
+	for i := 0; i < config.processes; i++ {
 		wg.Add(1)
-		go wrapper_HandleJSON(jsonObjChannel, workObjChannel, citationObjChannel, &wg)
+		go wrapper_HandleJSON(jsonObjChannel, workObjChannel, citationObjChannel, config.processes, &wg)
 	}
 
-	go createJSONObjs(fileChannel, jsonObjChannel)
+	go createJSONObjs(jsonLines, jsonObjChannel)
+
+	wg.Wait()
+
+	os.Exit(1)
 
 	/*
 		Create Citation objs
 		Concurrent channel for converting JSON objs to Citation objs
 	*/
-	go jsonToCitationObjs(jsonObjs, citationObjChannel)
-	for {
-		citationObj, ok := <-citationObjChannel
-
-		if !ok {
-			break
-		}
-
-		citationOutput = append(citationOutput, citationObj)
-	}
 
 	// Write Works data to JSON file
-	wrapper_WriteJSON(worksOutputPath, workOutput)
+	wrapper_WriteJSON(config.worksOutputPath, workOutput)
 
 	// Write Citation data to JSON file
-	wrapper_WriteJSON(citesOutputPath, citationOutput)
+	wrapper_WriteJSON(config.citesOutputPath, citationOutput)
 
 }

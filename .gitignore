@@ -167,3 +167,4 @@ data/*
 oag_go
 extract_json
 graphml-generator
+neo4j.dump

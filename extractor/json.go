@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/schollz/progressbar/v3"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
@@ -56,19 +55,13 @@ pipe into a channel
 
 On a decode error, break loop and close outChannel
 */
-func createJSONObjs(inChannel chan string, outChannel chan map[string]any) {
-	for {
-		jsonString, ok := <-inChannel
-
-		if !ok {
-			break
-		}
-
+func createJSONObjs(data []string, outChannel chan map[string]any) {
+	for i := range data {
 		var jsonObj map[string]any
-		err := json.Unmarshal([]byte(jsonString), &jsonObj)
+		err := json.Unmarshal([]byte(data[i]), &jsonObj)
 
 		if err != nil {
-			fmt.Println(err, jsonString)
+			fmt.Println(err, data[i])
 			break
 		}
 
@@ -83,49 +76,40 @@ Convert a map[string]any object into a Work object
 
 On conversion error, continue to the next iteration of the for loop
 */
-func jsonToWorkObjs(inChannel chan map[string]any, outChannel chan Work) {
+func jsonToWorkObj(obj map[string]any, outChannel chan Work) {
 	caser := cases.Title(language.AmericanEnglish)
 
-	for {
-		obj, ok := <-inChannel
+	id := _cleanOAID(obj["id"].(string))
 
-		if !ok {
-			break
-		}
-
-		id := _cleanOAID(obj["id"].(string))
-
-		doi, ok := obj["doi"].(string)
-		if !ok {
-			continue
-		}
-		doi = strings.Replace(doi, "https://doi.org/", "", -1)
-
-		title, ok := obj["title"].(string)
-		if !ok {
-			continue
-		}
-		title = caser.String(title)
-		title = strings.Replace(title, "\"", "", -1)
-		title = strings.Replace(title, `"`, `\"`, -1)
-
-		publishedDateString, _ := obj["publication_date"].(string)
-		publishedDate, _ := time.Parse("2006-01-02", publishedDateString)
-
-		workObj := Work{
-			OA_ID:          id,
-			DOI:            doi,
-			Title:          title,
-			Is_Paratext:    obj["is_paratext"].(bool),
-			Is_Retracted:   obj["is_retracted"].(bool),
-			Date_Published: publishedDate,
-			OA_Type:        obj["type"].(string),
-			CF_Type:        obj["type_crossref"].(string),
-		}
-
-		outChannel <- workObj
+	doi, ok := obj["doi"].(string)
+	if !ok {
+		return
 	}
-	close(outChannel)
+	doi = strings.Replace(doi, "https://doi.org/", "", -1)
+
+	title, ok := obj["title"].(string)
+	if !ok {
+		return
+	}
+	title = caser.String(title)
+	title = strings.Replace(title, "\"", "", -1)
+	title = strings.Replace(title, `"`, `\"`, -1)
+
+	publishedDateString, _ := obj["publication_date"].(string)
+	publishedDate, _ := time.Parse("2006-01-02", publishedDateString)
+
+	workObj := Work{
+		OA_ID:          id,
+		DOI:            doi,
+		Title:          title,
+		Is_Paratext:    obj["is_paratext"].(bool),
+		Is_Retracted:   obj["is_retracted"].(bool),
+		Date_Published: publishedDate,
+		OA_Type:        obj["type"].(string),
+		CF_Type:        obj["type_crossref"].(string),
+	}
+
+	outChannel <- workObj
 }
 
 /*
@@ -133,34 +117,20 @@ Convert a map[string]any object into a Work object
 
 On conversion error, continue to the next iteration of the for loop
 */
-func jsonToCitationObjs(jsonObjs []map[string]any, channel chan Citation) {
-	var jsonObj map[string]any
+func jsonToCitationObj(obj map[string]any, outChannel chan Citation) {
+	id := _cleanOAID(obj["id"].(string))
 
-	size := int64(len(jsonObjs))
-	bar := progressbar.Default(size, "Converting JSON obs to Citation objs...")
+	refs := obj["referenced_works"].([]interface{})
 
-	for i := 0; i < len(jsonObjs); i++ {
-		jsonObj = jsonObjs[i]
+	for idx := range refs {
+		refID := _cleanOAID(refs[idx].(string))
 
-		id := _cleanOAID(jsonObj["id"].(string))
-
-		refs := jsonObj["referenced_works"].([]interface{})
-		bar.ChangeMax(bar.GetMax() + len(refs))
-
-		for idx := range refs {
-			refID := _cleanOAID(refs[idx].(string))
-
-			citationObj := Citation{
-				Work_OA_ID: id,
-				Ref_OA_ID:  refID,
-			}
-
-			bar.Add(1)
-			channel <- citationObj
-
+		citationObj := Citation{
+			Work_OA_ID: id,
+			Ref_OA_ID:  refID,
 		}
+
+		outChannel <- citationObj
+
 	}
-	bar.Finish()
-	bar.Exit()
-	close(channel)
 }
