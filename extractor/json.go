@@ -10,31 +10,6 @@ import (
 	"golang.org/x/text/language"
 )
 
-/*
-Type to represent an academic work from OpenAlex
-
-Does not include all of the descriptors provided by OpenAlex, only the most
-relevant ones for this application
-*/
-type Work struct {
-	OA_ID          string
-	DOI            string
-	Title          string
-	Is_Paratext    bool
-	Is_Retracted   bool
-	Date_Published time.Time
-	OA_Type        string
-	CF_Type        string
-}
-
-/*
-Type to represent the citations of an academic work
-*/
-type Citation struct {
-	Work_OA_ID string
-	Ref_OA_ID  string
-}
-
 func _cleanOAID(oa_id string) string {
 	return strings.Replace(oa_id, "https://openalex.org/", "", -1)
 }

@@ -7,6 +7,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/schollz/progressbar/v3"
 )
 
 /*
@@ -75,11 +77,40 @@ func readLines(file *os.File, outChannel chan string) {
 	}
 }
 
-/*
-Given an Output object, marshell it and write it to a file
-*/
-func writeJSON(file *os.File, data interface{}) {
+func writeFile(fp string, data []interface{}) {
+	outputFile := createFile(fp)
+	defer outputFile.Close()
+
 	outputJSON, _ := json.MarshalIndent(data, "", "    ")
-	writer := bufio.NewWriter(file)
+
+	writer := bufio.NewWriter(outputFile)
 	writer.Write(outputJSON)
+
+	fmt.Println("Wrote to file:", filepath.Base(fp))
+}
+
+func writeWorkToFile(fp string, inChannel chan Work) {
+	var output []interface{}
+
+	bar := progressbar.Default(-1, "Collecting Work objs...")
+
+	for data := range inChannel {
+		output = append(output, data)
+		bar.Add(1)
+	}
+
+	writeFile(fp, output)
+}
+
+func writeCitationToFile(fp string, inChannel chan Citation) {
+	var output []interface{}
+
+	bar := progressbar.Default(-1, "Collecting Work objs...")
+
+	for data := range inChannel {
+		output = append(output, data)
+		bar.Add(1)
+	}
+
+	writeFile(fp, output)
 }

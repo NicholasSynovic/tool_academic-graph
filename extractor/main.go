@@ -2,17 +2,9 @@ package main
 
 import (
 	"flag"
-	"fmt"
-	"path/filepath"
 
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/schollz/progressbar/v3"
 )
-
-type AppConfig struct {
-	inputPath, worksOutputPath, citesOutputPath string
-	processes                                   int
-}
 
 /*
 Parse the command line for relevant program flags
@@ -36,40 +28,6 @@ func parseCommandLine() AppConfig {
 	flag.Parse()
 
 	return config
-}
-
-func _writeToFile(fp string, data []interface{}) {
-	outputFile := createFile(fp)
-	defer outputFile.Close()
-	writeJSON(outputFile, data)
-	fmt.Println("Wrote to file:", filepath.Base(fp))
-
-}
-
-func writeWorkToFile(fp string, inChannel chan Work) {
-	var output []interface{}
-
-	bar := progressbar.Default(-1, "Collecting Work objs...")
-
-	for data := range inChannel {
-		output = append(output, data)
-		bar.Add(1)
-	}
-
-	_writeToFile(fp, output)
-}
-
-func writeCitationToFile(fp string, inChannel chan Citation) {
-	var output []interface{}
-
-	bar := progressbar.Default(-1, "Collecting Work objs...")
-
-	for data := range inChannel {
-		output = append(output, data)
-		bar.Add(1)
-	}
-
-	_writeToFile(fp, output)
 }
 
 func main() {
