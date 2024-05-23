@@ -53,14 +53,6 @@ def readWrite(
 
 @click.command()
 @click.option(
-    "-w",
-    "--input-works-file",
-    "worksFP",
-    type=Path,
-    required=True,
-    help="Path to Works JSON file",
-)
-@click.option(
     "-c",
     "--input-cites-file",
     "citesFP",
@@ -75,6 +67,14 @@ def readWrite(
     type=Path,
     required=True,
     help="Path to output database",
+)
+@click.option(
+    "-w",
+    "--input-works-file",
+    "worksFP",
+    type=Path,
+    required=True,
+    help="Path to Works JSON file",
 )
 def main(worksFP: Path, citesFP: Path, outputFP: Path) -> None:
     absWorksFP: Path = resolvePath(path=worksFP)

@@ -10,11 +10,7 @@ import (
 /*
 Parse the command line for relevant program flags
 
-Returns (string, string) where the first string is the absolute path of a
-SQLite3 database and the second is the absolute path of a text file to output
-queries to
-
-On error, calls _printCommandLineParsingError()
+Returns AppConfig
 */
 func parseCommandLine() AppConfig {
 	config := AppConfig{inputPath: "works.json", worksOutputPath: "works_output.json", citesOutputPath: "citations_output.json", processes: 1}
