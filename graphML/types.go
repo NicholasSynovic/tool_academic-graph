@@ -8,7 +8,3 @@ Modified by user command line input
 type AppConfig struct {
 	inputPath, outputPath string
 }
-
-type Row struct {
-	source, target string
-}
