@@ -1,4 +1,4 @@
-module github.com/NicholasSynovic/graphml_generator
+module github.com/NicholasSynovic/graphML_generator
 
 go 1.22.3
 
