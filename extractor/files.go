@@ -77,6 +77,9 @@ func readLines(file *os.File, outChannel chan string) {
 	}
 }
 
+/*
+Create and write to a file JSON content
+*/
 func writeFile(fp string, data []interface{}) {
 	outputFile := createFile(fp)
 	defer outputFile.Close()
@@ -89,6 +92,9 @@ func writeFile(fp string, data []interface{}) {
 	fmt.Println("Wrote to file:", filepath.Base(fp))
 }
 
+/*
+Write Work objects from a channel into a JSON file
+*/
 func writeWorkToFile(fp string, inChannel chan Work) {
 	var output []interface{}
 
@@ -102,10 +108,13 @@ func writeWorkToFile(fp string, inChannel chan Work) {
 	writeFile(fp, output)
 }
 
+/*
+Write Citation objects from a channel into a JSON file
+*/
 func writeCitationToFile(fp string, inChannel chan Citation) {
 	var output []interface{}
 
-	bar := progressbar.Default(-1, "Collecting Work objs...")
+	bar := progressbar.Default(-1, "Collecting Citation objs...")
 
 	for data := range inChannel {
 		output = append(output, data)
