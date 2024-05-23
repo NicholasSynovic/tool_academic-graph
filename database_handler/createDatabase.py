@@ -2,13 +2,12 @@ from pathlib import Path
 
 import click
 import pandas
+from oag.sqlite import createDBConnection
+from oag.sqlite.db import DB
 from pandas import DataFrame
 from pyfs import isFile, resolvePath
 from sqlalchemy import Engine, text
 from sqlalchemy.exc import IntegrityError
-
-from oag.sqlite import createDBConnection
-from oag.sqlite.db import DB
 
 
 def readWrite(
