@@ -6,13 +6,14 @@ from typing import Generator
 
 import click
 import pandas
-from oag.graph.graph import Neo4J
-from oag.sqlite import createDBConnection
-from oag.sqlite.db import DB
 from pandas import DataFrame
 from progress.bar import Bar
 from pyfs import isFile, resolvePath
 from sqlalchemy import Engine
+
+from database_handler.graph.graph import Neo4J
+from database_handler.sqlite import createDBConnection
+from database_handler.sqlite.db import DB
 
 
 def addWorks(
