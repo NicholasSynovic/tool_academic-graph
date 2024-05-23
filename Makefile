@@ -16,7 +16,7 @@ build:
 
 
 create-dev:
-	rm -rf env
+	rm -rf env bin
 	python3.10 -m venv env
 	( \
 		. env/bin/activate; \
