@@ -44,21 +44,21 @@ func createJSONObjs(inChannel chan string, outChannel chan map[string]any) {
 /*
 Convert a map[string]any object into a Work object
 */
-func jsonToWorkObj(inChannel chan map[string]any, outChannel chan Work) {
+func jsonToWorkObj(data []map[string]any, outChannel chan Work) {
 	defer close(outChannel)
 
-	for data := range inChannel {
+	for idx := range data {
 		caser := cases.Title(language.AmericanEnglish)
 
-		id := _cleanOAID(data["id"].(string))
+		id := _cleanOAID(data[idx]["id"].(string))
 
-		doi, ok := data["doi"].(string)
+		doi, ok := data[idx]["doi"].(string)
 		if !ok {
 			doi = "!error"
 		}
 		doi = strings.Replace(doi, "https://doi.org/", "", -1)
 
-		title, ok := data["title"].(string)
+		title, ok := data[idx]["title"].(string)
 		if !ok {
 			title = "!error"
 
@@ -67,18 +67,18 @@ func jsonToWorkObj(inChannel chan map[string]any, outChannel chan Work) {
 		title = strings.Replace(title, "\"", "", -1)
 		title = strings.Replace(title, `"`, `\"`, -1)
 
-		publishedDateString, _ := data["publication_date"].(string)
+		publishedDateString, _ := data[idx]["publication_date"].(string)
 		publishedDate, _ := time.Parse("2006-01-02", publishedDateString)
 
 		workObj := Work{
 			OA_ID:          id,
 			DOI:            doi,
 			Title:          title,
-			Is_Paratext:    data["is_paratext"].(bool),
-			Is_Retracted:   data["is_retracted"].(bool),
+			Is_Paratext:    data[idx]["is_paratext"].(bool),
+			Is_Retracted:   data[idx]["is_retracted"].(bool),
 			Date_Published: publishedDate,
-			OA_Type:        data["type"].(string),
-			CF_Type:        data["type_crossref"].(string),
+			OA_Type:        data[idx]["type"].(string),
+			CF_Type:        data[idx]["type_crossref"].(string),
 		}
 		outChannel <- workObj
 	}
@@ -87,13 +87,13 @@ func jsonToWorkObj(inChannel chan map[string]any, outChannel chan Work) {
 /*
 Convert a map[string]any object into a Citation object
 */
-func jsonToCitationObj(inChannel chan map[string]any, outChannel chan Citation) {
+func jsonToCitationObj(data []map[string]any, outChannel chan Citation) {
 	defer close(outChannel)
 
-	for data := range inChannel {
-		id := _cleanOAID(data["id"].(string))
+	for idx := range data {
+		id := _cleanOAID(data[idx]["id"].(string))
 
-		refs := data["referenced_works"].([]interface{})
+		refs := data[idx]["referenced_works"].([]interface{})
 
 		for idx := range refs {
 			refID := _cleanOAID(refs[idx].(string))

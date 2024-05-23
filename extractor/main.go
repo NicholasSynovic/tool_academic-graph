@@ -4,6 +4,7 @@ import (
 	"flag"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/schollz/progressbar/v3"
 )
 
 /*
@@ -31,6 +32,9 @@ func parseCommandLine() AppConfig {
 }
 
 func main() {
+	// Variable to store objects
+	var objs []map[string]any
+
 	// Parse command line
 	config := parseCommandLine()
 
@@ -48,11 +52,18 @@ func main() {
 	// Create JSON objs
 	go createJSONObjs(jsonLinesChannel, jsonObjChannel)
 
+	bar := progressbar.Default(-1, "Collecting JSON objects...")
+	for data := range jsonObjChannel {
+		objs = append(objs, data)
+		bar.Add(1)
+	}
+	bar.Exit()
+
 	// Create Work objs
-	go jsonToWorkObj(jsonObjChannel, workObjChannel)
+	go jsonToWorkObj(objs, workObjChannel)
 
 	// Create Citation objs
-	go jsonToCitationObj(jsonObjChannel, citationObjChannel)
+	go jsonToCitationObj(objs, citationObjChannel)
 
 	// Write Work objs to file
 	writeWorkToFile(config.worksOutputPath, workObjChannel)
