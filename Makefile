@@ -1,5 +1,3 @@
-PWD := $(shell pwd)
-
 build:
 	( \
 		mkdir bin >> /dev/null; \
