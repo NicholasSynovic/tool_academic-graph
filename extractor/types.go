@@ -9,7 +9,6 @@ Modified by user command line input
 */
 type AppConfig struct {
 	inputPath, worksOutputPath, citesOutputPath string
-	processes                                   int
 }
 
 /*

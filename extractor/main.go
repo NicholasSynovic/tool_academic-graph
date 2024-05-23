@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"path/filepath"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/schollz/progressbar/v3"
@@ -13,16 +14,19 @@ Parse the command line for relevant program flags
 Returns AppConfig
 */
 func parseCommandLine() AppConfig {
-	config := AppConfig{inputPath: "works.json", worksOutputPath: "works_output.json", citesOutputPath: "citations_output.json", processes: 1}
+	config := AppConfig{inputPath: "works.json", worksOutputPath: "works_output.json", citesOutputPath: "citations_output.json"}
+
+	flag.StringVar(&config.citesOutputPath, "c", config.citesOutputPath, "Path to output JSON file to store Citation relationship information")
 
 	flag.StringVar(&config.inputPath, "i", config.inputPath, `Path to OpenAlex "Works" JSON Lines file`)
 
-	flag.StringVar(&config.worksOutputPath, "works-output", config.worksOutputPath, "Path to output JSON file to store Works information")
+	flag.StringVar(&config.worksOutputPath, "w", config.worksOutputPath, "Path to output JSON file to store Works information")
 
-	flag.StringVar(&config.citesOutputPath, "cites-output", config.citesOutputPath, "Path to output JSON file to store Citation relationship information")
-
-	flag.IntVar(&config.processes, "proc", config.processes, "Number of processors to use")
 	flag.Parse()
+
+	config.inputPath, _ = filepath.Abs(config.inputPath)
+	config.citesOutputPath, _ = filepath.Abs(config.inputPath)
+	config.worksOutputPath, _ = filepath.Abs(config.inputPath)
 
 	return config
 }
