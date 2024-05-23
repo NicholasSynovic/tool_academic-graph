@@ -54,7 +54,7 @@ def readWrite(
 @click.command()
 @click.option(
     "-c",
-    "--input-cites-file",
+    "--cites-file",
     "citesFP",
     type=Path,
     required=True,
@@ -62,7 +62,7 @@ def readWrite(
 )
 @click.option(
     "-o",
-    "--output",
+    "--db",
     "outputFP",
     type=Path,
     required=True,
@@ -70,7 +70,7 @@ def readWrite(
 )
 @click.option(
     "-w",
-    "--input-works-file",
+    "--works-file",
     "worksFP",
     type=Path,
     required=True,
