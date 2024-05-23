@@ -30,15 +30,15 @@ func parseCommandLine() AppConfig {
 func main() {
 	config := parseCommandLine()
 
-	nodeChannel := make(chan Node)
-	edgeChannel := make(chan Edge)
-
 	sqlQuery_GetUniqueWorks := "SELECT DISTINCT work FROM cites"
 	sqlQuery_GetRows := `SELECT work, reference
 	FROM cites
 	WHERE reference IN (
 		SELECT work FROM cites
-	);`
+		);`
+
+	nodeChannel := make(chan Node)
+	edgeChannel := make(chan Edge)
 
 	dbConn := connectToDatabase(config.inputPath)
 	defer dbConn.Close()
@@ -52,7 +52,7 @@ func main() {
 	nodes := bufferNodes(nodeChannel)
 	edges := bufferEdges(edgeChannel)
 
-	grpahML := createGraphML(nodes, edges)
+	graphML := createGraphML(nodes, edges)
 
-	writeGraphML(config.outputPath, grpahML)
+	writeGraphML(config.outputPath, graphML)
 }
