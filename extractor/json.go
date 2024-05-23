@@ -10,6 +10,11 @@ import (
 	"golang.org/x/text/language"
 )
 
+/*
+Remove OpenAlex URI from string
+
+Returns a formatted string
+*/
 func _cleanOAID(oa_id string) string {
 	return strings.Replace(oa_id, "https://openalex.org/", "", -1)
 }
@@ -38,11 +43,10 @@ func createJSONObjs(inChannel chan string, outChannel chan map[string]any) {
 
 /*
 Convert a map[string]any object into a Work object
-
-On conversion error, continue to the next iteration of the for loop
 */
 func jsonToWorkObj(inChannel chan map[string]any, outChannel chan Work) {
 	defer close(outChannel)
+
 	for data := range inChannel {
 		caser := cases.Title(language.AmericanEnglish)
 
@@ -81,25 +85,25 @@ func jsonToWorkObj(inChannel chan map[string]any, outChannel chan Work) {
 }
 
 /*
-Convert a map[string]any object into a Work object
-
-On conversion error, continue to the next iteration of the for loop
+Convert a map[string]any object into a Citation object
 */
-func jsonToCitationObj(obj map[string]any, outChannel chan Citation) {
+func jsonToCitationObj(inChannel chan map[string]any, outChannel chan Citation) {
 	defer close(outChannel)
-	id := _cleanOAID(obj["id"].(string))
 
-	refs := obj["referenced_works"].([]interface{})
+	for data := range inChannel {
+		id := _cleanOAID(data["id"].(string))
 
-	for idx := range refs {
-		refID := _cleanOAID(refs[idx].(string))
+		refs := data["referenced_works"].([]interface{})
 
-		citationObj := Citation{
-			Work_OA_ID: id,
-			Ref_OA_ID:  refID,
+		for idx := range refs {
+			refID := _cleanOAID(refs[idx].(string))
+
+			citationObj := Citation{
+				Work_OA_ID: id,
+				Ref_OA_ID:  refID,
+			}
+
+			outChannel <- citationObj
 		}
-
-		outChannel <- citationObj
-
 	}
 }
