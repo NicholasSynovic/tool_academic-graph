@@ -50,7 +50,7 @@ func createFile(fp string) *os.File {
 /*
 Given a file, read each line in it
 
-On error, exit the application with code 1
+On error, break
 */
 func readLines(file *os.File, outChannel chan string) {
 	defer close(outChannel)

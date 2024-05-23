@@ -15,16 +15,6 @@ type AppConfig struct {
 }
 
 /*
-Wraps around the writeJSON() function to provide output to the command line
-*/
-func wrapper_WriteJSON(fp string, data interface{}) {
-	citesOutputFile := createFile(fp)
-	writeJSON(citesOutputFile, data)
-	citesOutputFile.Close()
-	fmt.Println("Wrote to file:", filepath.Base(fp))
-}
-
-/*
 Parse the command line for relevant program flags
 
 Returns (string, string) where the first string is the absolute path of a
@@ -48,28 +38,38 @@ func parseCommandLine() AppConfig {
 	return config
 }
 
-func writeJSONToFile(fp string, inChannel chan interface{}) {
+func _writeToFile(fp string, data []interface{}) {
+	outputFile := createFile(fp)
+	defer outputFile.Close()
+	writeJSON(outputFile, data)
+	fmt.Println("Wrote to file:", filepath.Base(fp))
+
+}
+
+func writeWorkToFile(fp string, inChannel chan Work) {
 	var output []interface{}
 
-	citesOutputFile := createFile(fp)
-	defer citesOutputFile.Close()
+	bar := progressbar.Default(-1, "Collecting Work objs...")
 
-	bar := progressbar.Default(-1, "Writing data...")
-
-	for {
-		data, ok := <-inChannel
-
-		if !ok {
-			break
-		}
-
+	for data := range inChannel {
 		output = append(output, data)
 		bar.Add(1)
 	}
 
-	writeJSON(citesOutputFile, output)
-	fmt.Println("Wrote to file:", filepath.Base(fp))
+	_writeToFile(fp, output)
+}
 
+func writeCitationToFile(fp string, inChannel chan Citation) {
+	var output []interface{}
+
+	bar := progressbar.Default(-1, "Collecting Work objs...")
+
+	for data := range inChannel {
+		output = append(output, data)
+		bar.Add(1)
+	}
+
+	_writeToFile(fp, output)
 }
 
 func main() {
@@ -94,8 +94,8 @@ func main() {
 	go jsonToWorkObj(jsonObjChannel, workObjChannel)
 
 	// Write Work objs to file
-	go writeJSONToFile(config.worksOutputPath, workObjChannel)
+	writeWorkToFile(config.worksOutputPath, workObjChannel)
 
 	// Write Citations objs to file
-	go writeJSONToFile(config.worksOutputPath, workObjChannel)
+	writeCitationToFile(config.worksOutputPath, citationObjChannel)
 }

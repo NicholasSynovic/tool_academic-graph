@@ -46,6 +46,7 @@ pipe into a channel
 On a decode error, break loop and close outChannel
 */
 func createJSONObjs(inChannel chan string, outChannel chan map[string]any) {
+	defer close(outChannel)
 
 	for data := range inChannel {
 		var jsonObj map[string]any
@@ -58,7 +59,6 @@ func createJSONObjs(inChannel chan string, outChannel chan map[string]any) {
 
 		outChannel <- jsonObj
 	}
-	close(outChannel)
 }
 
 /*
@@ -67,6 +67,7 @@ Convert a map[string]any object into a Work object
 On conversion error, continue to the next iteration of the for loop
 */
 func jsonToWorkObj(inChannel chan map[string]any, outChannel chan Work) {
+	defer close(outChannel)
 	for data := range inChannel {
 		caser := cases.Title(language.AmericanEnglish)
 
@@ -102,7 +103,6 @@ func jsonToWorkObj(inChannel chan map[string]any, outChannel chan Work) {
 		}
 		outChannel <- workObj
 	}
-	close(outChannel)
 }
 
 /*
@@ -111,6 +111,7 @@ Convert a map[string]any object into a Work object
 On conversion error, continue to the next iteration of the for loop
 */
 func jsonToCitationObj(obj map[string]any, outChannel chan Citation) {
+	defer close(outChannel)
 	id := _cleanOAID(obj["id"].(string))
 
 	refs := obj["referenced_works"].([]interface{})
