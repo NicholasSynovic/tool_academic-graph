@@ -1,4 +1,4 @@
-module NicholasSynovic/extract_json
+module NicholasSynovic/oa_extractor
 
 go 1.22.3
 

@@ -1,4 +1,4 @@
-module github.com/NicholasSynovic/oag_go
+module github.com/NicholasSynovic/graphml_generator
 
 go 1.22.3
 
