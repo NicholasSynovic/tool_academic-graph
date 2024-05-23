@@ -51,9 +51,12 @@ func main() {
 	// Create Work objs
 	go jsonToWorkObj(jsonObjChannel, workObjChannel)
 
+	// Create Citation objs
+	go jsonToCitationObj(jsonObjChannel, citationObjChannel)
+
 	// Write Work objs to file
 	writeWorkToFile(config.worksOutputPath, workObjChannel)
 
 	// Write Citations objs to file
-	writeCitationToFile(config.worksOutputPath, citationObjChannel)
+	writeCitationToFile(config.citesOutputPath, citationObjChannel)
 }
