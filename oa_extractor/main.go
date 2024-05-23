@@ -25,8 +25,8 @@ func parseCommandLine() AppConfig {
 	flag.Parse()
 
 	config.inputPath, _ = filepath.Abs(config.inputPath)
-	config.citesOutputPath, _ = filepath.Abs(config.inputPath)
-	config.worksOutputPath, _ = filepath.Abs(config.inputPath)
+	config.citesOutputPath, _ = filepath.Abs(config.citesOutputPath)
+	config.worksOutputPath, _ = filepath.Abs(config.worksOutputPath)
 
 	return config
 }
