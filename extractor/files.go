@@ -80,7 +80,7 @@ func readLines(file *os.File, outChannel chan string) {
 /*
 Create and write to a file JSON content
 */
-func writeFile(fp string, data []interface{}) {
+func writeJSONFile(fp string, data []interface{}) {
 	outputFile := createFile(fp)
 	defer outputFile.Close()
 
@@ -106,7 +106,7 @@ func writeWorkToFile(fp string, inChannel chan Work) {
 	}
 	bar.Exit()
 
-	writeFile(fp, output)
+	writeJSONFile(fp, output)
 }
 
 /*
@@ -123,5 +123,5 @@ func writeCitationToFile(fp string, inChannel chan Citation) {
 	}
 	bar.Exit()
 
-	writeFile(fp, output)
+	writeJSONFile(fp, output)
 }
