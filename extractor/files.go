@@ -104,6 +104,7 @@ func writeWorkToFile(fp string, inChannel chan Work) {
 		output = append(output, data)
 		bar.Add(1)
 	}
+	bar.Exit()
 
 	writeFile(fp, output)
 }
@@ -120,6 +121,7 @@ func writeCitationToFile(fp string, inChannel chan Citation) {
 		output = append(output, data)
 		bar.Add(1)
 	}
+	bar.Exit()
 
 	writeFile(fp, output)
 }
