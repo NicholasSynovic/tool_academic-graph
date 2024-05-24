@@ -47,9 +47,12 @@ func main() {
 	rows := queryDB(dbConn, sqlQuery_GetRows)
 
 	go writeNodesToChannel(uniqueWorks, nodeChannel)
-	go writeEdgesToChannel(rows, edgeChannel)
 
-	nodes := bufferNodes(nodeChannel)
+	nodeMap := bufferNodes(nodeChannel)
+	nodes := mapToNodeSlice(nodeMap)
+
+	writeEdgesToChannel(rows, nodeMap, edgeChannel)
+
 	edges := bufferEdges(edgeChannel)
 
 	graphML := createGraphML(nodes, edges)

@@ -61,7 +61,7 @@ func writeNodesToChannel(uniqueWorks *sql.Rows, outChannel chan Node) {
 	}
 }
 
-func writeEdgesToChannel(rows *sql.Rows, outChannel chan Edge) {
+func writeEdgesToChannel(rows *sql.Rows, nodeMap map[string]Node, outChannel chan Edge) {
 	defer rows.Close()
 	defer close(outChannel)
 
@@ -72,34 +72,57 @@ func writeEdgesToChannel(rows *sql.Rows, outChannel chan Edge) {
 		edgeID := fmt.Sprintf("e%d", counter)
 
 		rows.Scan(&s, &t)
+
+		/*
+			Given an oa_id, lookup and store the Node ID attribute for source
+			and target
+		*/
+
+		source := nodeMap[s].ID
+		target := nodeMap[t].ID
+
 		outChannel <- Edge{
 			ID:     edgeID,
-			Source: s,
-			Target: t,
+			Source: source,
+			Target: target,
 		}
 
 		counter++
 	}
 }
 
-func bufferNodes(nodeChannel chan Node) []Node {
-	var nodes []Node
+func bufferNodes(inChannel chan Node) map[string]Node {
+	nodeMap := map[string]Node{}
 
 	bar := progressbar.Default(-1, "Buffering nodes...")
-	for node := range nodeChannel {
-		nodes = append(nodes, node)
+	for node := range inChannel {
+		// Store oa_id as the key and the Node object as the value
+		nodeMap[node.Data.Key] = node
+
 		bar.Add(1)
 	}
 	bar.Exit()
 
+	return nodeMap
+}
+
+func mapToNodeSlice(nodeMap map[string]Node) []Node {
+	var nodes []Node
+
+	bar := progressbar.Default(-1, "Buffering nodes...")
+	for _, node := range nodeMap {
+		nodes = append(nodes, node)
+		bar.Add(1)
+	}
+
 	return nodes
 }
 
-func bufferEdges(edgeChannel chan Edge) []Edge {
+func bufferEdges(inChannel chan Edge) []Edge {
 	var edges []Edge
 
 	bar := progressbar.Default(-1, "Buffering edges...")
-	for edge := range edgeChannel {
+	for edge := range inChannel {
 		edges = append(edges, edge)
 		bar.Add(1)
 	}
