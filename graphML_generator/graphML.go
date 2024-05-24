@@ -25,9 +25,21 @@ type Graph struct {
 type Node struct {
 	XMLName xml.Name `xml:"node"`
 	ID      string   `xml:"id,attr"`
+	Data    Data     `xml:"data"`
 }
 
-// Edge structure
+type Data struct {
+	Key   string `xml:"key,attr"`
+	Value string `xml:",chardata"`
+}
+
+type Key struct {
+	ID   string `xml:"id,attr"`
+	For  string `xml:"for,attr"`
+	Attr string `xml:"attr.name,attr"`
+	Type string `xml:"attr.type,attr"`
+}
+
 type Edge struct {
 	XMLName xml.Name `xml:"edge"`
 	ID      string   `xml:"id,attr"`
@@ -39,10 +51,13 @@ func writeNodesToChannel(uniqueWorks *sql.Rows, outChannel chan Node) {
 	defer uniqueWorks.Close()
 	defer close(outChannel)
 
+	counter := 0
+
 	for uniqueWorks.Next() {
 		var nodeID string
 		uniqueWorks.Scan(&nodeID)
-		outChannel <- Node{ID: nodeID}
+		outChannel <- Node{ID: fmt.Sprintf("n%d", counter), Data: Data{Key: "oa_id", Value: nodeID}}
+		counter++
 	}
 }
 
