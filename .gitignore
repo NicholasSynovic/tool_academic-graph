@@ -166,3 +166,4 @@ bin/*
 *.gml
 *.json
 *.dump
+*.tar.gz

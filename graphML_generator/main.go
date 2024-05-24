@@ -51,7 +51,7 @@ func main() {
 	nodeMap := bufferNodes(nodeChannel)
 	nodes := mapToNodeSlice(nodeMap)
 
-	writeEdgesToChannel(rows, nodeMap, edgeChannel)
+	go writeEdgesToChannel(rows, nodeMap, edgeChannel)
 
 	edges := bufferEdges(edgeChannel)
 

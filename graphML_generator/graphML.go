@@ -97,7 +97,7 @@ func bufferNodes(inChannel chan Node) map[string]Node {
 	bar := progressbar.Default(-1, "Buffering nodes...")
 	for node := range inChannel {
 		// Store oa_id as the key and the Node object as the value
-		nodeMap[node.Data.Key] = node
+		nodeMap[node.Data.Value] = node
 
 		bar.Add(1)
 	}
@@ -107,13 +107,14 @@ func bufferNodes(inChannel chan Node) map[string]Node {
 }
 
 func mapToNodeSlice(nodeMap map[string]Node) []Node {
-	var nodes []Node
+	nodes := []Node{}
 
-	bar := progressbar.Default(-1, "Buffering nodes...")
-	for _, node := range nodeMap {
-		nodes = append(nodes, node)
+	bar := progressbar.Default(int64(len(nodeMap)), "Creating a slice of Node objects...")
+	for _, value := range nodeMap {
+		nodes = append(nodes, value)
 		bar.Add(1)
 	}
+	bar.Exit()
 
 	return nodes
 }
