@@ -1,7 +1,7 @@
 #!/bin/bash
 
 source optparse.bash
-optparse.define short=db long=database desc="The SQLite3 database to process" variable=db
+optparse.define short=i long=input desc="The SQLite3 database to process" variable=db
 optparse.define short=o long=output desc="The output GraphML file" variable=output default=graph.gml
 source $( optparse.build )
 
