@@ -77,6 +77,8 @@ func writeEdgesToChannel(rows *sql.Rows, outChannel chan Edge) {
 			Source: s,
 			Target: t,
 		}
+
+		counter++
 	}
 }
 
