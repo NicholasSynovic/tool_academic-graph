@@ -43,7 +43,7 @@ func main() {
 
 	jsonLinesStringChan := make(chan string, 10000)
 	jsonObjsChan := make(chan map[string]any)
-	citationChannel := make(chan Citation)
+	// citationChannel := make(chan Citation)
 
 	inputFP := openFile(config.inputPath)
 	defer inputFP.Close()
@@ -57,8 +57,4 @@ func main() {
 		bar.Add(1)
 	}
 	bar.Exit()
-
-	go jsonToCitationtObj(jsonObjs, citationChannel)
-
-	writeCitationObjsToFile(config.outputPath, citationChannel)
 }

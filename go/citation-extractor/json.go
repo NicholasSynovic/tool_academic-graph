@@ -4,18 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	mapset "github.com/deckarep/golang-set/v2"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
-
-/*
-Remove OpenAlex URI from string
-
-Returns a formatted string
-*/
-func _cleanOAID(oa_id string) string {
-	return strings.Replace(oa_id, "https://openalex.org/", "", -1)
-}
 
 /*
 Parse a string representation of a JSON object into a map[string]any object and
@@ -58,23 +52,36 @@ func createJSONObjs(inChannel chan string, outChannel chan map[string]any) {
 }
 
 /*
-Convert a map[string]any object into a Citation object
+Convert a map[string]any object into a Document object
 */
-func jsonToCitationtObj(data []map[string]any, outChannel chan Citation) {
+func jsonToDocumentObj(data []map[string]any, outChannel chan Document) {
 	defer close(outChannel)
+
+	caser := cases.Title(language.AmericanEnglish)
 
 	for idx := range data {
 		json := data[idx]
+		openAccessObj := json["open_access"].(map[string]any)
 
-		sourceID := _cleanOAID(json["id"].(string))
-		refIDs := json["referenced_works"].([]any)
+		doi := json["doi"].(string)
+		doi = strings.Replace(doi, "https://doi.org/", "", -1)
 
-		for refIDX := range refIDs {
-			outChannel <- Citation{
-				SOURCE: sourceID,
-				DEST:   _cleanOAID(refIDs[refIDX].(string)),
-			}
+		title := caser.String(json["title"].(string))
+		title = strings.Replace(title, "\"", "", -1)
+		title = strings.Replace(title, `"`, `\"`, -1)
+
+		publishedDateString, _ := json["publication_date"].(string)
+		publication_date, _ := time.Parse("2006-01-02", publishedDateString)
+
+		outChannel <- Document{
+			DOI:              doi,
+			TITLE:            title,
+			PUBLICATION_DATE: publication_date,
+			OA_TYPE:          json["type"].(string),
+			CR_TYPE:          json["type_crossref"].(string),
+			CITED_BY_COUNT:   int(json["cited_by_count"].(float64)),
+			RETRACTED:        json["is_retracted"].(bool),
+			OPEN_ACCESS:      openAccessObj["is_oa"].(bool),
 		}
-
 	}
 }
