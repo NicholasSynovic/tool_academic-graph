@@ -41,7 +41,7 @@ func main() {
 
 	var jsonObjs []map[string]any
 
-	jsonLinesStringChan := make(chan string, 10000)
+	jsonLinesStringChan := make(chan string)
 	jsonObjsChan := make(chan map[string]any)
 	pairChannel := make(chan Pair)
 
