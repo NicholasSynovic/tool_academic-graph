@@ -1,4 +1,4 @@
-module NicholasSynovic/works
+module NicholasSynovic/oaid-doi-mapper
 
 go 1.22.3
 
