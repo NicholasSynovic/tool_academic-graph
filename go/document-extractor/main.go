@@ -14,7 +14,7 @@ func parseCommandLine() AppConfig {
 
 	flag.StringVar(&config.inputPath, "i", config.inputPath, `Path to OpenAlex "Works" JSON Lines file`)
 
-	flag.StringVar(&config.outputPath, "o", config.outputPath, `Path to output JSON file to store "Works" information`)
+	flag.StringVar(&config.outputPath, "o", config.outputPath, `Path to output JSON file to store document metadata`)
 
 	flag.Parse()
 
@@ -43,7 +43,7 @@ func main() {
 
 	jsonLinesStringChan := make(chan string, 10000)
 	jsonObjsChan := make(chan map[string]any)
-	pairChannel := make(chan Pair)
+	documentChannel := make(chan Document)
 
 	inputFP := openFile(config.inputPath)
 	defer inputFP.Close()
@@ -58,7 +58,7 @@ func main() {
 	}
 	bar.Exit()
 
-	go jsonToPairObj(jsonObjs, pairChannel)
+	go jsonToDocumentObj(jsonObjs, documentChannel)
 
-	writePairObjsToFile(config.outputPath, pairChannel)
+	writeDocumentObjsToFile(config.outputPath, documentChannel)
 }
