@@ -5,14 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/schollz/progressbar/v3"
 )
-
-// 2: Open JSON file
-
-// 3: Read each line in the JSON file to channel
-
-// 4: For each line in the channel, convert to JSON object
-// progress spinner
 
 func parseCommandLine() AppConfig {
 	config := AppConfig{inputPath: "oa_works.json", outputPath: "works_output.json"}
@@ -43,4 +38,22 @@ func main() {
 		fmt.Println("ERROR: output exist:", config.outputPath)
 		os.Exit(1)
 	}
+
+	var jsonObjs []map[string]any
+
+	jsonLinesStringChan := make(chan string)
+	jsonObjsChan := make(chan map[string]any)
+
+	inputFP := openFile(config.inputPath)
+	defer inputFP.Close()
+
+	go readLines(inputFP, jsonLinesStringChan)
+	go createJSONObjs(jsonLinesStringChan, jsonObjsChan)
+
+	bar := progressbar.Default(-1, "Collecting JSON objects...")
+	for data := range jsonObjsChan {
+		jsonObjs = append(jsonObjs, data)
+		bar.Add(1)
+	}
+	bar.Exit()
 }
