@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	mapset "github.com/deckarep/golang-set/v2"
 )
 
 /*
@@ -24,6 +26,8 @@ On a decode error, break loop and close outChannel
 func createJSONObjs(inChannel chan string, outChannel chan map[string]any) {
 	defer close(outChannel)
 
+	set := mapset.NewSet[string]()
+
 	for data := range inChannel {
 		var jsonObj map[string]any
 		err := json.Unmarshal([]byte(data), &jsonObj)
@@ -31,6 +35,22 @@ func createJSONObjs(inChannel chan string, outChannel chan map[string]any) {
 		if err != nil {
 			fmt.Println(err, data)
 			break
+		}
+
+		doi, ok := jsonObj["doi"].(string)
+		if !ok {
+			continue
+		}
+
+		_, ok = jsonObj["title"].(string)
+		if !ok {
+			continue
+		}
+
+		if set.Contains(doi) {
+			continue
+		} else {
+			set.Add(doi)
 		}
 
 		outChannel <- jsonObj
