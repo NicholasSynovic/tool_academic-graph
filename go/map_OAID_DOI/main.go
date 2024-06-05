@@ -41,7 +41,7 @@ func main() {
 
 	var jsonObjs []map[string]any
 
-	jsonLinesStringChan := make(chan string)
+	jsonLinesStringChan := make(chan string, 10000)
 	jsonObjsChan := make(chan map[string]any)
 	pairChannel := make(chan Pair)
 
@@ -59,4 +59,6 @@ func main() {
 	bar.Exit()
 
 	go jsonToPairObj(jsonObjs, pairChannel)
+
+	writePairObjsToFile(config.outputPath, pairChannel)
 }

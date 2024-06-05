@@ -52,10 +52,6 @@ func jsonToPairObj(data []map[string]any, outChannel chan Pair) {
 		}
 		doi = strings.Replace(doi, "https://doi.org/", "", -1)
 
-		pairObj := Pair{
-			oaid: id,
-			doi:  doi,
-		}
-		outChannel <- pairObj
+		outChannel <- Pair{OAID: id, DOI: doi}
 	}
 }

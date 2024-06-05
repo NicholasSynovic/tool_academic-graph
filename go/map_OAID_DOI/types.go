@@ -13,6 +13,6 @@ type AppConfig struct {
 Type to a pairing between OA IDs and DOIs
 */
 type Pair struct {
-	oaid string
-	doi  string
+	OAID string `json:"oaid"`
+	DOI  string `json:"doi"`
 }
