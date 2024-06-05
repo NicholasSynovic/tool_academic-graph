@@ -4,10 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
-	"time"
-
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 /*
@@ -42,14 +38,12 @@ func createJSONObjs(inChannel chan string, outChannel chan map[string]any) {
 }
 
 /*
-Convert a map[string]any object into a Work object
+Convert a map[string]any object into a Pair object
 */
-func jsonToWorkObj(data []map[string]any, outChannel chan Work) {
+func jsonToPairObj(data []map[string]any, outChannel chan Pair) {
 	defer close(outChannel)
 
 	for idx := range data {
-		caser := cases.Title(language.AmericanEnglish)
-
 		id := _cleanOAID(data[idx]["id"].(string))
 
 		doi, ok := data[idx]["doi"].(string)
@@ -58,52 +52,10 @@ func jsonToWorkObj(data []map[string]any, outChannel chan Work) {
 		}
 		doi = strings.Replace(doi, "https://doi.org/", "", -1)
 
-		title, ok := data[idx]["title"].(string)
-		if !ok {
-			title = "!error"
-
+		pairObj := Pair{
+			oaid: id,
+			doi:  doi,
 		}
-		title = caser.String(title)
-		title = strings.Replace(title, "\"", "", -1)
-		title = strings.Replace(title, `"`, `\"`, -1)
-
-		publishedDateString, _ := data[idx]["publication_date"].(string)
-		publishedDate, _ := time.Parse("2006-01-02", publishedDateString)
-
-		workObj := Work{
-			OA_ID:          id,
-			DOI:            doi,
-			Title:          title,
-			Is_Paratext:    data[idx]["is_paratext"].(bool),
-			Is_Retracted:   data[idx]["is_retracted"].(bool),
-			Date_Published: publishedDate,
-			OA_Type:        data[idx]["type"].(string),
-			CF_Type:        data[idx]["type_crossref"].(string),
-		}
-		outChannel <- workObj
-	}
-}
-
-/*
-Convert a map[string]any object into a Citation object
-*/
-func jsonToCitationObj(data []map[string]any, outChannel chan Citation) {
-	defer close(outChannel)
-
-	for idx := range data {
-		id := _cleanOAID(data[idx]["id"].(string))
-
-		refs := data[idx]["referenced_works"].([]interface{})
-
-		for idx := range refs {
-			refID := _cleanOAID(refs[idx].(string))
-
-			citationObj := Citation{
-				Work_OA_ID: id,
-				Ref_OA_ID:  refID,
-			}
-
-			outChannel <- citationObj
-		}
+		outChannel <- pairObj
 	}
 }

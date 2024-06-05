@@ -1,7 +1,5 @@
 package main
 
-import "time"
-
 /*
 Type to represent application configuration
 
@@ -12,29 +10,9 @@ type AppConfig struct {
 }
 
 /*
-Type to represent the citations of an academic work
-
-Does not include all of the descriptors provided by OpenAlex, only the most
-relevant ones for this application
+Type to a pairing between OA IDs and DOIs
 */
-type Citation struct {
-	Work_OA_ID string
-	Ref_OA_ID  string
-}
-
-/*
-Type to represent an academic work from OpenAlex
-
-Does not include all of the descriptors provided by OpenAlex, only the most
-relevant ones for this application
-*/
-type Work struct {
-	OA_ID          string
-	DOI            string
-	Title          string
-	Is_Paratext    bool
-	Is_Retracted   bool
-	Date_Published time.Time
-	OA_Type        string
-	CF_Type        string
+type Pair struct {
+	oaid string
+	doi  string
 }

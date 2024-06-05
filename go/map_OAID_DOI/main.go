@@ -43,6 +43,7 @@ func main() {
 
 	jsonLinesStringChan := make(chan string)
 	jsonObjsChan := make(chan map[string]any)
+	pairChannel := make(chan Pair)
 
 	inputFP := openFile(config.inputPath)
 	defer inputFP.Close()
@@ -56,4 +57,6 @@ func main() {
 		bar.Add(1)
 	}
 	bar.Exit()
+
+	go jsonToPairObj(jsonObjs, pairChannel)
 }
