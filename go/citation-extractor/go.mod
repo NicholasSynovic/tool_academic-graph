@@ -5,7 +5,6 @@ go 1.22.3
 require (
 	github.com/deckarep/golang-set/v2 v2.6.0
 	github.com/schollz/progressbar/v3 v3.14.3
-	golang.org/x/text v0.16.0
 )
 
 require (
