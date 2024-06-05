@@ -14,7 +14,7 @@ func parseCommandLine() AppConfig {
 
 	flag.StringVar(&config.inputPath, "i", config.inputPath, `Path to OpenAlex "Works" JSON Lines file`)
 
-	flag.StringVar(&config.outputPath, "o", config.outputPath, "Path to output JSON file to store OpenAlex ID -> DOI mapping")
+	flag.StringVar(&config.outputPath, "o", config.outputPath, `Path to output JSON file to store "Works" information`)
 
 	flag.Parse()
 
