@@ -48,7 +48,7 @@ func jsonToPairObj(data []map[string]any, outChannel chan Pair) {
 
 		doi, ok := data[idx]["doi"].(string)
 		if !ok {
-			doi = "!error"
+			continue
 		}
 		doi = strings.Replace(doi, "https://doi.org/", "", -1)
 
