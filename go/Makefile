@@ -1,14 +1,20 @@
 build:
 	( \
 		mkdir bin >> /dev/null; \
-		cd graphML_generator; \
-		go build -o ../bin/graphML-generator.bin; \
+		cd cmd/citation_extraction; \
+		go build -o ../../bin/ag-ce.bin; \
 	)
 
 	( \
 		mkdir bin >> /dev/null; \
-		cd oa_extractor; \
-		go build -o ../bin/oa-extractor.bin; \
+		cd cmd/document_extraction; \
+		go build -o ../../bin/ag-de.bin; \
+	)
+
+	( \
+		mkdir bin >> /dev/null; \
+		cd cmd/oaid_doi_mapper; \
+		go build -o ../../bin/ag-odm.bin; \
 	)
 
 create-dev:
