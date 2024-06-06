@@ -16,6 +16,7 @@ func main() {
 
 	jsonLinesStringChan := make(chan string)
 	jsonObjsChan := make(chan map[string]any)
+	crObjsChan := make(chan utils.CitationRelationship)
 
 	go utils.ReadLines(inputFP, jsonLinesStringChan)
 	go utils.CreateJSONObjs(jsonLinesStringChan, jsonObjsChan)
@@ -26,5 +27,9 @@ func main() {
 		bar.Add(1)
 	}
 	bar.Exit()
+
+	go utils.JSONToCitationRelationshipObj(jsonObjs, crObjsChan)
+
+	utils.WriteCitationRelationshipObjsToFile(config.OutputPath, crObjsChan)
 
 }

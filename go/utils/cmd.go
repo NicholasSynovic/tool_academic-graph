@@ -41,12 +41,12 @@ func testValidInputs(config AppConfig) {
 	_, err := os.Stat(config.InputPath)
 	if err != nil {
 		fmt.Println("ERROR: input doesn't exist:", config.InputPath)
-		os.Exit(1)
+		panic(err)
 	}
 
 	_, err = os.Stat(config.OutputPath)
 	if err == nil {
 		fmt.Println("ERROR: output exist:", config.OutputPath)
-		os.Exit(1)
+		panic(err)
 	}
 }

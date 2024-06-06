@@ -85,3 +85,32 @@ func JSONToDocumentObj(data []map[string]any, outChannel chan Document) {
 		}
 	}
 }
+
+/*
+Remove OpenAlex URI from string
+
+Returns a formatted string
+*/
+func cleanOAID(oa_id string) string {
+	return strings.Replace(oa_id, "https://openalex.org/", "", -1)
+}
+
+/*
+Convert a map[string]any object into a CitationRelationship object
+*/
+func JSONToCitationRelationshipObj(data []map[string]any, outChannel chan CitationRelationship) {
+	defer close(outChannel)
+
+	for idx := range data {
+		json := data[idx]
+
+		id := cleanOAID(json["id"].(string))
+		refs := json["referenced_works"].([]interface{})
+
+		for idx := range refs {
+			ref := cleanOAID(refs[idx].(string))
+			outChannel <- CitationRelationship{SOURCE: id, DEST: ref}
+		}
+
+	}
+}

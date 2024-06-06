@@ -14,7 +14,7 @@ type AppConfig struct {
 /*
 Citation Relationship type
 */
-type Citation struct {
+type CitationRelationship struct {
 	SOURCE string `json:"source"`
 	DEST   string `json:"dest"`
 }
