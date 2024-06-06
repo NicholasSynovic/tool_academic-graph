@@ -115,7 +115,6 @@ func WriteDocumentObjsToFile(filePath string, inChannel chan Document) {
 	writeJSONToFile(outputFP, jsonData)
 
 	fmt.Println("Wrote to file:", filepath.Base(filePath))
-
 }
 
 /*
@@ -140,5 +139,28 @@ func WriteCitationRelationshipObjsToFile(filePath string, inChannel chan Citatio
 	writeJSONToFile(outputFP, jsonData)
 
 	fmt.Println("Wrote to file:", filepath.Base(filePath))
+}
 
+/*
+Write CitationRelationship objects from a channel into a JSON file
+*/
+func WriteODPObjsToFile(filePath string, inChannel chan ODP) {
+	var data []ODP
+
+	bar := progressbar.Default(-1, "Collecting objs...")
+
+	for pair := range inChannel {
+		data = append(data, pair)
+		bar.Add(1)
+	}
+	bar.Exit()
+
+	outputFP := CreateFile(filePath)
+	defer outputFP.Close()
+
+	jsonData, _ := json.MarshalIndent(data, "", "    ")
+
+	writeJSONToFile(outputFP, jsonData)
+
+	fmt.Println("Wrote to file:", filepath.Base(filePath))
 }

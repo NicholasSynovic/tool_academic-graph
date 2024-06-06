@@ -9,14 +9,14 @@ import (
 func main() {
 	var jsonObjs []map[string]any
 
-	config := utils.ParseCommandLine("OpenAlex documents")
+	config := utils.ParseCommandLine("OpenAlex ID to DOI pairings")
 
 	inputFP := utils.OpenFile(config.InputPath)
 	defer inputFP.Close()
 
 	jsonLinesStringChan := make(chan string)
 	jsonObjsChan := make(chan map[string]any)
-	documentObjsChan := make(chan utils.Document)
+	odpObjsChan := make(chan utils.ODP)
 
 	go utils.ReadLines(inputFP, jsonLinesStringChan)
 	go utils.CreateJSONObjs(jsonLinesStringChan, jsonObjsChan)
@@ -28,7 +28,7 @@ func main() {
 	}
 	bar.Exit()
 
-	go utils.JSONToDocumentObj(jsonObjs, documentObjsChan)
+	go utils.JSONToODPObj(jsonObjs, odpObjsChan)
 
-	utils.WriteDocumentObjsToFile(config.OutputPath, documentObjsChan)
+	utils.WriteODPObjsToFile(config.OutputPath, odpObjsChan)
 }

@@ -114,3 +114,19 @@ func JSONToCitationRelationshipObj(data []map[string]any, outChannel chan Citati
 
 	}
 }
+
+func JSONToODPObj(data []map[string]any, outChannel chan ODP) {
+	defer close(outChannel)
+
+	for idx := range data {
+		id := cleanOAID(data[idx]["id"].(string))
+
+		doi, ok := data[idx]["doi"].(string)
+		if !ok {
+			continue
+		}
+		doi = strings.Replace(doi, "https://doi.org/", "", -1)
+
+		outChannel <- ODP{OAID: id, DOI: doi}
+	}
+}

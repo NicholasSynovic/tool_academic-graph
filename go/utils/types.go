@@ -32,3 +32,11 @@ type Document struct {
 	RETRACTED        bool      `json:"is_retracted"`
 	OPEN_ACCESS      bool      `json:"is_open_access"`
 }
+
+/*
+OA ID -> DOI Pair type
+*/
+type ODP struct {
+	OAID string `json:"oaid"`
+	DOI  string `json:"doi"`
+}
