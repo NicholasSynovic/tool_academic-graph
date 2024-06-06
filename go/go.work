@@ -2,5 +2,6 @@ go 1.22.3
 
 use (
 	./cmd/citation_extraction
+	./cmd/document_extractor
 	./utils
 )
