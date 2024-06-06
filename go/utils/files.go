@@ -78,26 +78,11 @@ func ReadLines(file *os.File, outChannel chan string) {
 }
 
 /*
-Write Document objects from a channel into a JSON file
+Write JSON data to a file
 */
-func WriteObjsToFile(fp string, inChannel chan interface{}) {
-	var output []interface{}
-
-	bar := progressbar.Default(-1, "Collecting objs...")
-
-	for data := range inChannel {
-		output = append(output, data)
-		bar.Add(1)
-	}
-	bar.Exit()
-
-	outputFP := CreateFile(fp)
-	defer outputFP.Close()
-
-	outputJSON, _ := json.MarshalIndent(output, "", "    ")
-
+func writeJSONToFile(outputFP *os.File, data []byte) {
 	writer := bufio.NewWriter(outputFP)
-	_, err := writer.Write(outputJSON)
+	_, err := writer.Write(data)
 	if err != nil {
 		panic(err)
 	}
@@ -106,6 +91,29 @@ func WriteObjsToFile(fp string, inChannel chan interface{}) {
 	if err != nil {
 		panic(err)
 	}
+}
 
-	fmt.Println("Wrote to file:", filepath.Base(fp))
+/*
+Write Document objects from a channel into a JSON file
+*/
+func WriteDocumentObjsToFile(filePath string, inChannel chan Document) {
+	var data []Document
+
+	bar := progressbar.Default(-1, "Collecting objs...")
+
+	for document := range inChannel {
+		data = append(data, document)
+		bar.Add(1)
+	}
+	bar.Exit()
+
+	outputFP := CreateFile(filePath)
+	defer outputFP.Close()
+
+	jsonData, _ := json.MarshalIndent(data, "", "    ")
+
+	writeJSONToFile(outputFP, jsonData)
+
+	fmt.Println("Wrote to file:", filepath.Base(filePath))
+
 }

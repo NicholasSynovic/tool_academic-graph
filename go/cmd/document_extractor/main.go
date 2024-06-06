@@ -16,6 +16,7 @@ func main() {
 
 	jsonLinesStringChan := make(chan string)
 	jsonObjsChan := make(chan map[string]any)
+	documentObjsChan := make(chan utils.Document)
 
 	go utils.ReadLines(inputFP, jsonLinesStringChan)
 	go utils.CreateJSONObjs(jsonLinesStringChan, jsonObjsChan)
@@ -27,4 +28,7 @@ func main() {
 	}
 	bar.Exit()
 
+	go utils.JSONToDocumentObj(jsonObjs, documentObjsChan)
+
+	utils.WriteDocumentObjsToFile(config.OutputPath, documentObjsChan)
 }
