@@ -13,4 +13,4 @@ fi
 cd ../go/bin
 mkdir -p data
 
-ls $absInputPath/part*.json | xargs -I % basename % | xargs -I {} $absProgPath/ag-ce.bin -i $absInputPath/{} -o data/ce_{}.json
+ls $absInputPath/part* | xargs -I % basename % | xargs -I {} $absProgPath/ag-ce.bin -i $absInputPath/{} -o data/ce_{}.json
