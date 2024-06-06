@@ -2,6 +2,8 @@ package utils
 
 import (
 	"flag"
+	"fmt"
+	"os"
 	"path/filepath"
 )
 
@@ -24,5 +26,21 @@ func ParseCommandLine(storeObject string) AppConfig {
 	config.inputPath, _ = filepath.Abs(config.inputPath)
 	config.outputPath, _ = filepath.Abs(config.outputPath)
 
+	testValidInputs(config)
+
 	return config
+}
+
+func testValidInputs(config AppConfig) {
+	_, err := os.Stat(config.inputPath)
+	if err != nil {
+		fmt.Println("ERROR: input doesn't exist:", config.inputPath)
+		os.Exit(1)
+	}
+
+	_, err = os.Stat(config.outputPath)
+	if err == nil {
+		fmt.Println("ERROR: output exist:", config.outputPath)
+		os.Exit(1)
+	}
 }

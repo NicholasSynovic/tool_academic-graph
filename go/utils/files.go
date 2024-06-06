@@ -16,7 +16,7 @@ Open a file that already exists
 
 Returns a pointer to that file
 */
-func openFile(fp string) *os.File {
+func OpenFile(fp string) *os.File {
 	var file *os.File
 	var err error
 
@@ -35,7 +35,7 @@ Create a file that does not exist or empty a file that does exist
 
 Returns a pointer to that file
 */
-func createFile(fp string) *os.File {
+func CreateFile(fp string) *os.File {
 	var file *os.File
 	var err error
 
@@ -54,7 +54,7 @@ Given a file, read each line in it
 
 On error, break
 */
-func readLines(file *os.File, outChannel chan string) {
+func ReadLines(file *os.File, outChannel chan string) {
 	defer close(outChannel)
 	reader := bufio.NewReader(file)
 
@@ -80,7 +80,7 @@ func readLines(file *os.File, outChannel chan string) {
 /*
 Write Document objects from a channel into a JSON file
 */
-func writeObjsToFile(fp string, inChannel chan interface{}) {
+func WriteObjsToFile(fp string, inChannel chan interface{}) {
 	var output []interface{}
 
 	bar := progressbar.Default(-1, "Collecting objs...")
@@ -91,7 +91,7 @@ func writeObjsToFile(fp string, inChannel chan interface{}) {
 	}
 	bar.Exit()
 
-	outputFP := createFile(fp)
+	outputFP := CreateFile(fp)
 	defer outputFP.Close()
 
 	outputJSON, _ := json.MarshalIndent(output, "", "    ")

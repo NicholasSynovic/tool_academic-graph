@@ -80,7 +80,7 @@ func readLines(file *os.File, outChannel chan string) {
 /*
 Write Document objects from a channel into a JSON file
 */
-func writeDocumentObjsToFile(fp string, inChannel chan Document) {
+func WriteDocumentObjsToFile(fp string, inChannel chan Document) {
 	var output []Document
 
 	bar := progressbar.Default(-1, "Collecting Document objs...")
