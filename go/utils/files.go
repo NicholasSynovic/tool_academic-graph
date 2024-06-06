@@ -69,8 +69,7 @@ func ReadLines(file *os.File, outChannel chan string) {
 		}
 
 		if err != nil {
-			fmt.Println("Error reading file:", filepath.Base(file.Name()), err)
-			break
+			panic(err)
 		}
 
 		outChannel <- line

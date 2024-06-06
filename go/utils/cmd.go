@@ -2,7 +2,6 @@ package utils
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -40,13 +39,11 @@ Ensure that AppConfig values:
 func testValidInputs(config AppConfig) {
 	_, err := os.Stat(config.InputPath)
 	if err != nil {
-		fmt.Println("ERROR: input doesn't exist:", config.InputPath)
-		panic(err)
+		panic(os.ErrNotExist)
 	}
 
 	_, err = os.Stat(config.OutputPath)
 	if err == nil {
-		fmt.Println("ERROR: output exist:", config.OutputPath)
-		panic(err)
+		panic(os.ErrExist)
 	}
 }
