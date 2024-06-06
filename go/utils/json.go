@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/json"
-	"fmt"
 	"strings"
 	"time"
 
@@ -10,6 +9,40 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
+
+/*
+Given a list of keys, ensure that the JSON object has a string value for each key.
+
+Return false if not.
+*/
+func checkJSONKeyExistence(obj map[string]any, keys []string) bool {
+	for idx := range keys {
+		_, ok := obj[keys[idx]].(string)
+		if !ok {
+			return false
+		}
+	}
+
+	return true
+}
+
+/*
+Remove OpenAlex URI from string
+
+Returns a formatted string
+*/
+func cleanOAID(oa_id string) string {
+	return strings.Replace(oa_id, "https://openalex.org/", "", -1)
+}
+
+/*
+Remove DOI URI from string
+
+Returns a formatted string
+*/
+func cleanDOI(doi string) string {
+	return strings.Replace(doi, "https://doi.org/", "", -1)
+}
 
 /*
 Parse a string representation of a JSON object into a map[string]any object and
@@ -27,20 +60,17 @@ func CreateJSONObjs(inChannel chan string, outChannel chan map[string]any) {
 		err := json.Unmarshal([]byte(data), &jsonObj)
 
 		if err != nil {
-			fmt.Println(err, data)
-			break
+			panic(err)
 		}
 
-		doi, ok := jsonObj["doi"].(string)
-		if !ok {
+		// If false, continue
+		if !(checkJSONKeyExistence(jsonObj, []string{"doi", "title"})) {
 			continue
 		}
 
-		_, ok = jsonObj["title"].(string)
-		if !ok {
-			continue
-		}
+		doi, _ := jsonObj["doi"].(string)
 
+		// If the doi has already been identified, continue
 		if set.Contains(doi) {
 			continue
 		} else {
@@ -63,8 +93,7 @@ func JSONToDocumentObj(data []map[string]any, outChannel chan Document) {
 		json := data[idx]
 		openAccessObj := json["open_access"].(map[string]any)
 
-		doi := json["doi"].(string)
-		doi = strings.Replace(doi, "https://doi.org/", "", -1)
+		doi := cleanDOI(json["doi"].(string))
 
 		title := caser.String(json["title"].(string))
 		title = strings.Replace(title, "\"", "", -1)
@@ -84,15 +113,6 @@ func JSONToDocumentObj(data []map[string]any, outChannel chan Document) {
 			OPEN_ACCESS:      openAccessObj["is_oa"].(bool),
 		}
 	}
-}
-
-/*
-Remove OpenAlex URI from string
-
-Returns a formatted string
-*/
-func cleanOAID(oa_id string) string {
-	return strings.Replace(oa_id, "https://openalex.org/", "", -1)
 }
 
 /*
@@ -119,13 +139,9 @@ func JSONToODPObj(data []map[string]any, outChannel chan ODP) {
 	defer close(outChannel)
 
 	for idx := range data {
-		id := cleanOAID(data[idx]["id"].(string))
-
-		doi, ok := data[idx]["doi"].(string)
-		if !ok {
-			continue
-		}
-		doi = strings.Replace(doi, "https://doi.org/", "", -1)
+		json := data[idx]
+		id := cleanOAID(json["id"].(string))
+		doi := cleanDOI(json["doi"].(string))
 
 		outChannel <- ODP{OAID: id, DOI: doi}
 	}
