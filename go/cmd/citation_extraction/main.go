@@ -1,6 +1,10 @@
 package main
 
-import "ag/utils"
+import (
+	"ag/utils"
+
+	"github.com/schollz/progressbar/v3"
+)
 
 func main() {
 	var jsonObjs []map[string]any
@@ -14,5 +18,13 @@ func main() {
 	jsonObjsChan := make(chan map[string]any)
 
 	go utils.ReadLines(inputFP, jsonLinesStringChan)
+	go utils.CreateJSONObjs(jsonLinesStringChan, jsonObjsChan)
+
+	bar := progressbar.Default(-1, "Collecting JSON objects...")
+	for data := range jsonObjsChan {
+		jsonObjs = append(jsonObjs, data)
+		bar.Add(1)
+	}
+	bar.Exit()
 
 }
