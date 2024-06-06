@@ -1,4 +1,4 @@
-module ag/citation_extraction
+module ag/citation_extractor
 
 go 1.22.3
 

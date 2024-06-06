@@ -1,13 +1,13 @@
 build:
 	( \
 		mkdir bin >> /dev/null; \
-		cd cmd/citation_extraction; \
+		cd cmd/citation_extractor; \
 		go build -o ../../bin/ag-ce.bin; \
 	)
 
 	( \
 		mkdir bin >> /dev/null; \
-		cd cmd/document_extraction; \
+		cd cmd/document_extractor; \
 		go build -o ../../bin/ag-de.bin; \
 	)
 
