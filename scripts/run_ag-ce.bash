@@ -4,6 +4,8 @@ optparse.define short=i long=input desc="Directory containing OpenAlex \"Works\"
 optparse.define short=s long=suffix desc="Suffix for output JSON files" variable=fileSuffix
 source $( optparse.build )
 
+
+
 absProgPath=$(readlink -f ../go/bin)
 absInputPath=$(readlink -f $inputPath)
 
@@ -14,4 +16,4 @@ fi
 cd ../go/bin
 mkdir -p data
 
-ls $absInputPath/part* | xargs -I % basename % | xargs -I % $absProgPath/ag-ce.bin -i $absInputPath/% -o data/ce_$fileSuffix_%.json
+ls $absInputPath/part* | xargs -I % basename % | xargs -I % echo "$absProgPath/ag-ce.bin -i $absInputPath/% -o data/ce_$fileSuffix_%.json"
