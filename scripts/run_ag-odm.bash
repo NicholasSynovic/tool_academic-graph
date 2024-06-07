@@ -14,4 +14,4 @@ fi
 cd ../go/bin
 mkdir -p data
 
-ls $absInputPath/part* | xargs -I % bash -c 'basename "$1"' _ % | xargs -I % bash -c '$2/ag-de.bin -i $3/% -o data/ce_$4_%.json' _ % "$absProgPath" "$absInputPath" "$fileSuffix"
+ls $absInputPath/part* | xargs -I % bash -c 'basename "$1"' _ % | xargs -I % bash -c '$2/ag-de.bin -i $3/% -o data/odm_$4_%.json' _ % "$absProgPath" "$absInputPath" "$fileSuffix"
