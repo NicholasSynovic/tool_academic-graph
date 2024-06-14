@@ -2,10 +2,7 @@ module NicholasSynovic/massive-index
 
 go 1.22.3
 
-require (
-	github.com/schollz/progressbar v1.0.0
-	github.com/schollz/progressbar/v3 v3.14.4
-)
+require github.com/schollz/progressbar/v3 v3.14.4
 
 require (
 	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect

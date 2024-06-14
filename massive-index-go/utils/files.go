@@ -2,10 +2,14 @@ package utils
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 )
+
+func CheckExtension(fp string, extension string) bool {
+	return filepath.Ext(fp) == extension
+}
 
 func OpenFile(fp string) *os.File {
 	var file *os.File
@@ -14,8 +18,7 @@ func OpenFile(fp string) *os.File {
 	file, err = os.Open(fp)
 
 	if err != nil {
-		fmt.Println("Error opening:", fp)
-		os.Exit(1)
+		panic(err)
 	}
 
 	return file

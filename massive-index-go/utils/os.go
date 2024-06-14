@@ -14,9 +14,11 @@ func ListFilesInDirectory(directory string) ([]string, int) {
 	}
 
 	for _, file := range directoryReader {
-		filename := file.Name()
-		fp, _ := filepath.Abs(filename)
-		files = append(files, fp)
+		if !file.IsDir() {
+			filename := file.Name()
+			fp, _ := filepath.Abs(directory + "/" + filename)
+			files = append(files, fp)
+		}
 	}
 
 	return files, len(files)
