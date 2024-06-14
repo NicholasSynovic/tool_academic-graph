@@ -13,7 +13,6 @@ import (
 
 func readLines(fp *os.File, outChannel chan types.File_Lines) {
 	filepath := fp.Name()
-
 	reader := bufio.NewReader(fp)
 
 	for {
@@ -33,6 +32,7 @@ func readLines(fp *os.File, outChannel chan types.File_Lines) {
 		outChannel <- types.File_Lines{Line: line, Filepath: filepath}
 	}
 
+	close(outChannel)
 }
 
 func writeToFile(filepathString string, data []types.Work_Index) {
@@ -56,7 +56,6 @@ func main() {
 	config := utils.ParseCommandLine()
 
 	lineChan := make(chan types.File_Lines)
-	defer close(lineChan)
 
 	inputFP := utils.OpenFile(config.InputFilePath)
 	defer inputFP.Close()
@@ -64,10 +63,9 @@ func main() {
 	outputJSONFP := utils.CreateFile(config.OutputFilePath)
 	defer outputJSONFP.Close()
 
-	readLines(inputFP, lineChan)
+	go readLines(inputFP, lineChan)
 
 	workObjs, _ := utils.ConvertToWorkObjs(lineChan)
 
 	writeToFile(config.OutputFilePath, workObjs)
-
 }
