@@ -26,6 +26,7 @@ func OpenFile(fp string) *os.File {
 
 func ReadLines(file *os.File, outChannel chan string) {
 	defer close(outChannel)
+
 	reader := bufio.NewReader(file)
 
 	for {
