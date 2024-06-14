@@ -10,7 +10,7 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
-func readLines(directory string, outChannel chan string) {
+func readLines(directory string, outChannel chan types.File_Lines) {
 	files, fileCount := utils.ListFilesInDirectory(directory)
 
 	barMessage := "Reading files from " + filepath.Base(directory)
@@ -18,15 +18,16 @@ func readLines(directory string, outChannel chan string) {
 	defer bar.Exit()
 
 	for idx := range files {
-		if !utils.CheckExtension(files[idx], ".json") {
+		filepath := files[idx]
+		if !utils.CheckExtension(filepath, ".json") {
 			bar.Add(1)
 			continue
 		}
 
-		fp := utils.OpenFile(files[idx])
+		fp := utils.OpenFile(filepath)
 
 		// Handles closing outChannel
-		go utils.ReadLines(fp, outChannel)
+		go utils.ReadLines(fp, filepath, outChannel)
 
 		bar.Add(1)
 	}
@@ -54,11 +55,15 @@ func writeToFile(filepathString string, data []types.Work_Index) {
 func main() {
 	config := utils.ParseCommandLine()
 
-	lineChan := make(chan string, 1000000)
+	lineChan := make(chan types.File_Lines, 1000000)
+
+	outputJSONFP := utils.CreateFile(config.OutputJSONPath)
+	defer outputJSONFP.Close()
 
 	readLines(config.OAWorkJSONDirectoryPath, lineChan)
 
 	workObjs, _ := utils.ConvertToWorkObjs(lineChan)
 
 	writeToFile(config.OutputJSONPath, workObjs)
+
 }

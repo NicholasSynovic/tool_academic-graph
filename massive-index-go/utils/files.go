@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"NicholasSynovic/types"
 	"bufio"
 	"fmt"
 	"io"
@@ -25,17 +26,17 @@ func OpenFile(fp string) *os.File {
 	return file
 }
 
-func ReadLines(file *os.File, outChannel chan string) {
+func ReadLines(fp *os.File, filepath string, outChannel chan types.File_Lines) {
 	defer close(outChannel)
 
-	reader := bufio.NewReader(file)
+	reader := bufio.NewReader(fp)
 
 	for {
 		line, err := reader.ReadString('\n')
 
 		if err == io.EOF {
 			if len(line) > 0 {
-				outChannel <- line
+				outChannel <- types.File_Lines{Line: line, Filepath: filepath}
 			}
 			break
 		}
@@ -44,7 +45,7 @@ func ReadLines(file *os.File, outChannel chan string) {
 			panic(err)
 		}
 
-		outChannel <- line
+		outChannel <- types.File_Lines{Line: line, Filepath: filepath}
 	}
 }
 
