@@ -3,34 +3,36 @@ package main
 import (
 	"NicholasSynovic/types"
 	"NicholasSynovic/utils"
+	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
 	"path/filepath"
-
-	"github.com/schollz/progressbar/v3"
 )
 
-func readLines(directory string, outChannel chan types.File_Lines) {
-	files, fileCount := utils.ListFilesInDirectory(directory)
+func readLines(fp *os.File, outChannel chan types.File_Lines) {
+	filepath := fp.Name()
 
-	barMessage := "Reading files from " + filepath.Base(directory)
-	bar := progressbar.Default(int64(fileCount), barMessage)
-	defer bar.Exit()
+	reader := bufio.NewReader(fp)
 
-	for idx := range files {
-		filepath := files[idx]
-		if !utils.CheckExtension(filepath, ".json") {
-			bar.Add(1)
-			continue
+	for {
+		line, err := reader.ReadString('\n')
+
+		if err == io.EOF {
+			if len(line) > 0 {
+				outChannel <- types.File_Lines{Line: line, Filepath: filepath}
+			}
+			break
 		}
 
-		fp := utils.OpenFile(filepath)
+		if err != nil {
+			panic(err)
+		}
 
-		// Handles closing outChannel
-		go utils.ReadLines(fp, filepath, outChannel)
-
-		bar.Add(1)
+		outChannel <- types.File_Lines{Line: line, Filepath: filepath}
 	}
+
 }
 
 func writeToFile(filepathString string, data []types.Work_Index) {
@@ -53,15 +55,19 @@ func writeToFile(filepathString string, data []types.Work_Index) {
 func main() {
 	config := utils.ParseCommandLine()
 
-	lineChan := make(chan types.File_Lines, 1000000)
+	lineChan := make(chan types.File_Lines)
+	defer close(lineChan)
 
-	outputJSONFP := utils.CreateFile(config.OutputJSONPath)
+	inputFP := utils.OpenFile(config.InputFilePath)
+	defer inputFP.Close()
+
+	outputJSONFP := utils.CreateFile(config.OutputFilePath)
 	defer outputJSONFP.Close()
 
-	readLines(config.OAWorkJSONDirectoryPath, lineChan)
+	readLines(inputFP, lineChan)
 
 	workObjs, _ := utils.ConvertToWorkObjs(lineChan)
 
-	writeToFile(config.OutputJSONPath, workObjs)
+	writeToFile(config.OutputFilePath, workObjs)
 
 }
