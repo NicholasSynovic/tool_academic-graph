@@ -8,16 +8,16 @@ import (
 )
 
 func ParseCommandLine() types.MassiveWorkIndex_AppConfig {
-	config := types.MassiveWorkIndex_AppConfig{OAWorkJSONDirectoryPath: ".", OutputDBPath: "oa_works_index.db"}
+	config := types.MassiveWorkIndex_AppConfig{OAWorkJSONDirectoryPath: ".", OutputJSONPath: "oa_works_index.json"}
 
 	flag.StringVar(&config.OAWorkJSONDirectoryPath, "i", config.OAWorkJSONDirectoryPath, `Path to OpenAlex "Works" JSON directory`)
 
-	flag.StringVar(&config.OutputDBPath, "o", config.OutputDBPath, "SQLite3 file to write OA Works Index to")
+	flag.StringVar(&config.OutputJSONPath, "o", config.OutputJSONPath, "SQLite3 file to write OA Works Index to")
 
 	flag.Parse()
 
 	config.OAWorkJSONDirectoryPath, _ = filepath.Abs(config.OAWorkJSONDirectoryPath)
-	config.OutputDBPath, _ = filepath.Abs(config.OutputDBPath)
+	config.OutputJSONPath, _ = filepath.Abs(config.OutputJSONPath)
 
 	testValidInputs(config)
 
@@ -30,7 +30,7 @@ func testValidInputs(config types.MassiveWorkIndex_AppConfig) {
 		panic(os.ErrNotExist)
 	}
 
-	_, err = os.Stat(config.OutputDBPath)
+	_, err = os.Stat(config.OutputJSONPath)
 	if err == nil {
 		panic(os.ErrExist)
 	}

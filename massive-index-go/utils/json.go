@@ -4,6 +4,7 @@ import (
 	"NicholasSynovic/types"
 	"encoding/json"
 	"strings"
+	"time"
 
 	"github.com/schollz/progressbar/v3"
 )
@@ -28,13 +29,16 @@ func ConvertToWorkObjs(inputChannel chan string) ([]types.Work_Index, int) {
 			panic(err)
 		}
 
-		rawOAID := jsonObj["id"].(string)
+		rawOAID, _ := jsonObj["id"].(string)
 		oaid := cleanOAID(rawOAID)
+
+		updatedDateString, _ := jsonObj["updated_date"].(string)
+		updatedDate, _ := time.Parse("2006-01-02T15:04:05.000000", updatedDateString)
 
 		workIndexObj := types.Work_Index{
 			ID:      idCounter,
 			OAID:    oaid,
-			UPDATED: "test",
+			UPDATED: updatedDate,
 		}
 
 		workIndexObjs = append(workIndexObjs, workIndexObj)

@@ -41,7 +41,18 @@ func CreateFile(fp string) *os.File {
 
 	file, err = os.Create(fp)
 
+	if err != nil {func writeJSONToFile(outputFP *os.File, data []byte) {
+	writer := bufio.NewWriter(outputFP)
+	_, err := writer.Write(data)
 	if err != nil {
+		panic(err)
+	}
+
+	err = writer.Flush()
+	if err != nil {
+		panic(err)
+	}
+}
 		fmt.Println("Error creating:", fp)
 		os.Exit(1)
 	}

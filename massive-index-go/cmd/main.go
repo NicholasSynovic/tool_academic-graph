@@ -1,7 +1,9 @@
 package main
 
 import (
+	"NicholasSynovic/types"
 	"NicholasSynovic/utils"
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 
@@ -30,6 +32,25 @@ func readLines(directory string, outChannel chan string) {
 	}
 }
 
+func writeToFile(filepathString string, data []types.Work_Index) {
+	fp := utils.CreateFile(filepathString)
+	defer fp.Close()
+
+	filename := filepath.Base(filepathString)
+
+	fmt.Println("Writing to " + filename)
+
+	jsonData, err := json.MarshalIndent(data, "", "    ")
+
+	if err != nil {
+		panic(err)
+	}
+
+	utils.WriteJSONToFile(fp, jsonData)
+
+	fmt.Println("Wrote to " + filename)
+}
+
 func main() {
 	config := utils.ParseCommandLine()
 
@@ -37,7 +58,7 @@ func main() {
 
 	readLines(config.OAWorkJSONDirectoryPath, lineChan)
 
-	_, numberOfWorkObjs := utils.ConvertToWorkObjs(lineChan)
+	workObjs, _ := utils.ConvertToWorkObjs(lineChan)
 
-	fmt.Println(numberOfWorkObjs)
+	writeToFile(config.OutputJSONPath, workObjs)
 }

@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -44,5 +45,32 @@ func ReadLines(file *os.File, outChannel chan string) {
 		}
 
 		outChannel <- line
+	}
+}
+
+func CreateFile(fp string) *os.File {
+	var file *os.File
+	var err error
+
+	file, err = os.Create(fp)
+
+	if err != nil {
+		fmt.Println("Error creating:", fp)
+		os.Exit(1)
+	}
+
+	return file
+}
+
+func WriteJSONToFile(outputFP *os.File, data []byte) {
+	writer := bufio.NewWriter(outputFP)
+	_, err := writer.Write(data)
+	if err != nil {
+		panic(err)
+	}
+
+	err = writer.Flush()
+	if err != nil {
+		panic(err)
 	}
 }
