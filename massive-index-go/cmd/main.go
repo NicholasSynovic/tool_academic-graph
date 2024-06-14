@@ -39,8 +39,6 @@ func writeToFile(filepathString string, data []types.Work_Index) {
 
 	filename := filepath.Base(filepathString)
 
-	fmt.Println("Writing to " + filename)
-
 	jsonData, err := json.MarshalIndent(data, "", "    ")
 
 	if err != nil {
