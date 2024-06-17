@@ -17,6 +17,33 @@ from sqlalchemy import (
     text,
 )
 
+keys: List = [
+    "authorship_count",
+    "cited_by_count",
+    "concept_count",
+    "cr_type",
+    "created",
+    "distinct_country_count",
+    "doi",
+    "filepath",
+    "grant_count",
+    "id",
+    "institution_count",
+    "is_paratext",
+    "is_retracted",
+    "keyword_count",
+    "language",
+    "license",
+    "oa_type",
+    "oaid",
+    "publication_location_count",
+    "published",
+    "sustainable_development_goal_count",
+    "title",
+    "topic_count",
+    "updated",
+]
+
 
 class DB:
     def __init__(self, dbConn: Engine) -> None:

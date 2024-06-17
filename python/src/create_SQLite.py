@@ -2,12 +2,12 @@ from pathlib import Path
 
 import click
 import pandas
-from database_handler.sqlite import createDBConnection
-from database_handler.sqlite.db import DB
 from pandas import DataFrame
 from pyfs import isFile, resolvePath
 from sqlalchemy import Engine, text
 from sqlalchemy.exc import IntegrityError
+from src.sqlite import createDBConnection
+from src.sqlite.db import DB
 
 
 def readWrite(
