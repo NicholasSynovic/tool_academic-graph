@@ -48,8 +48,22 @@ func CreateWorkIndices(inChannel chan types.FileLine) []types.WorkIndex {
 }
 
 func WriteWorkIndicesToFile(fp *os.File, data []types.WorkIndex) {
-	dataBytes, _ := json.Marshal(data)
-	utils.WriteJSONToFile(fp, dataBytes)
+	bar := progressbar.Default(int64(len(data)), "Writing to file...")
+
+	for _, record := range data {
+		jsonBytes, err := json.Marshal(record)
+		if err != nil {
+			continue
+		}
+		jsonBytes = append(jsonBytes, '\n')
+		_, err = fp.Write(jsonBytes)
+		if err != nil {
+			fmt.Println("Error writing to file:", err)
+			return
+		}
+
+		bar.Add(1)
+	}
 }
 
 func main() {

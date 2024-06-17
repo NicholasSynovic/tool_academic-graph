@@ -45,8 +45,22 @@ func CreateCitesRelationships(inChannel chan types.FileLine) []types.CitesRelati
 }
 
 func WriteCitesRelationshipsToFile(fp *os.File, data []types.CitesRelationship) {
-	dataBytes, _ := json.Marshal(data)
-	utils.WriteJSONToFile(fp, dataBytes)
+	bar := progressbar.Default(int64(len(data)), "Writing to file...")
+
+	for _, record := range data {
+		jsonBytes, err := json.Marshal(record)
+		if err != nil {
+			continue
+		}
+		jsonBytes = append(jsonBytes, '\n')
+		_, err = fp.Write(jsonBytes)
+		if err != nil {
+			fmt.Println("Error writing to file:", err)
+			return
+		}
+
+		bar.Add(1)
+	}
 }
 
 func main() {
