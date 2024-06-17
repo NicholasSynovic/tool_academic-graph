@@ -3,35 +3,20 @@ package utils
 import (
 	"NicholasSynovic/types"
 	"flag"
-	"os"
 	"path/filepath"
 )
 
-func ParseCommandLine() types.MassiveWorkIndex_AppConfig {
-	config := types.MassiveWorkIndex_AppConfig{InputDirectoryPath: ".", OutputFilePath: "oa_works_index.json"}
+func ParseCommandLine(inputHelpString string, outputHelpString string) types.AppConfig {
+	config := types.AppConfig{InputDirectoryPath: ".", OutputJSONFilePath: "output.json"}
 
-	flag.StringVar(&config.InputDirectoryPath, "i", config.InputDirectoryPath, `Path to OpenAlex "Works" JSON directory`)
+	flag.StringVar(&config.InputDirectoryPath, "i", config.InputDirectoryPath, inputHelpString)
 
-	flag.StringVar(&config.OutputFilePath, "o", config.OutputFilePath, "SQLite3 file to write OA Works Index to")
+	flag.StringVar(&config.OutputJSONFilePath, "o", config.OutputJSONFilePath, outputHelpString)
 
 	flag.Parse()
 
 	config.InputDirectoryPath, _ = filepath.Abs(config.InputDirectoryPath)
-	config.OutputFilePath, _ = filepath.Abs(config.OutputFilePath)
-
-	testValidInputs(config)
+	config.OutputJSONFilePath, _ = filepath.Abs(config.OutputJSONFilePath)
 
 	return config
-}
-
-func testValidInputs(config types.MassiveWorkIndex_AppConfig) {
-	_, err := os.Stat(config.InputDirectoryPath)
-	if err != nil {
-		panic(os.ErrNotExist)
-	}
-
-	_, err = os.Stat(config.OutputFilePath)
-	if err == nil {
-		panic(os.ErrExist)
-	}
 }

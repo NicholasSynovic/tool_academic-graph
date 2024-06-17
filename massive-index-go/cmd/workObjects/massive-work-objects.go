@@ -2,9 +2,9 @@ package main
 
 import (
 	"NicholasSynovic/types"
+	"NicholasSynovic/utils"
 	"bufio"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io"
 	"os"
@@ -14,21 +14,6 @@ import (
 
 	"github.com/schollz/progressbar/v3"
 )
-
-func ParseCommandLine() types.AppConfig {
-	config := types.AppConfig{InputDirectoryPath: ".", OutputJSONFilePath: "output.json"}
-
-	flag.StringVar(&config.InputDirectoryPath, "i", config.InputDirectoryPath, `Path to OpenAlex "Works" JSON directory`)
-
-	flag.StringVar(&config.OutputJSONFilePath, "o", config.OutputJSONFilePath, "JSON file to write OA Works objects to")
-
-	flag.Parse()
-
-	config.InputDirectoryPath, _ = filepath.Abs(config.InputDirectoryPath)
-	config.OutputJSONFilePath, _ = filepath.Abs(config.OutputJSONFilePath)
-
-	return config
-}
 
 func ValidateInputDirectory(directory string) bool {
 	fi, fiErr := os.Stat(directory)
@@ -258,7 +243,7 @@ func WriteWorkObjectsToFile(fp *os.File, data []types.WorkObject) {
 }
 
 func main() {
-	config := ParseCommandLine()
+	config := utils.ParseCommandLine(`Path to a directory containing OpenAlex "Works" JSON files`, "Path to a JSON file to store the output")
 
 	if !ValidateInputDirectory(config.InputDirectoryPath) {
 		fmt.Printf("%s is not a directory\n", config.InputDirectoryPath)
