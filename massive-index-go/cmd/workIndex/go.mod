@@ -1,4 +1,4 @@
-module NicholasSynovic/massive-index
+module NicholasSynovic/massive-work-index
 
 go 1.22.3
 
