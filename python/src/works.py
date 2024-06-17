@@ -64,8 +64,6 @@ def main(inputPath: Path, outputPath: Path, chunksize: int) -> None:
     ) as bar:
         for df in dfs:
             df.set_index(keys="id", inplace=True)
-            print(df)
-            quit()
             bar.next()
 
 
