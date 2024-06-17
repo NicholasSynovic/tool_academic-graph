@@ -27,8 +27,6 @@ func OpenFile(fp string) *os.File {
 }
 
 func ReadLines(fp *os.File, filepath string, outChannel chan types.File_Lines) {
-	defer close(outChannel)
-
 	reader := bufio.NewReader(fp)
 
 	for {
@@ -47,6 +45,8 @@ func ReadLines(fp *os.File, filepath string, outChannel chan types.File_Lines) {
 
 		outChannel <- types.File_Lines{Line: line, Filepath: filepath}
 	}
+
+	close(outChannel)
 }
 
 func CreateFile(fp string) *os.File {
