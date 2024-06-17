@@ -1,3 +1,3 @@
-module NicholasSynovic/massive-index
+module NicholasSynovic/cmd
 
 go 1.22.3
