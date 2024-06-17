@@ -2,11 +2,14 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/schollz/progressbar/v3"
 )
@@ -17,6 +20,13 @@ type AppConfig struct {
 
 type FileLine struct {
 	Line, Filepath string
+}
+
+type WorkIndex struct {
+	ID       int       `json:"id"`
+	OAID     string    `json:"oaid"`
+	UPDATED  time.Time `json:"updated"`
+	FILEPATH string    `json:"filepath"`
 }
 
 func ParseCommandLine() AppConfig {
@@ -102,9 +112,70 @@ func ReadLines(fps []*os.File, outChannel chan FileLine) {
 	close(outChannel)
 }
 
-/*
-Steps
-*/
+func CreateWorkIndices(inChannel chan FileLine) []WorkIndex {
+	data := []WorkIndex{}
+
+	idCounter := 0
+
+	spinner := progressbar.Default(-1, "Creating JSON objs...")
+
+	for fl := range inChannel {
+		var jsonObj map[string]any
+		err := json.Unmarshal([]byte(fl.Line), &jsonObj)
+
+		if err != nil {
+			panic(err)
+		}
+
+		rawOAID, _ := jsonObj["id"].(string)
+		oaid := strings.Replace(rawOAID, "https://openalex.org/", "", -1)
+
+		updatedDateString, _ := jsonObj["updated_date"].(string)
+		updatedDate, _ := time.Parse("2006-01-02T15:04:05.000000", updatedDateString)
+
+		workIndexObj := WorkIndex{
+			ID:       idCounter,
+			OAID:     oaid,
+			UPDATED:  updatedDate,
+			FILEPATH: fl.Filepath,
+		}
+
+		data = append(data, workIndexObj)
+
+		idCounter += 1
+		spinner.Add(1)
+	}
+	return data
+}
+
+func CreateFile(fp string) *os.File {
+	var file *os.File
+	var err error
+
+	file, err = os.Create(fp)
+
+	if err != nil {
+		fmt.Println("Error creating:", fp)
+		os.Exit(1)
+	}
+
+	return file
+}
+
+func WriteWorkIndicesToFile(fp *os.File, data []WorkIndex) {
+	dataBytes, _ := json.MarshalIndent(data, "", "    ")
+
+	writer := bufio.NewWriter(fp)
+	_, err := writer.Write(dataBytes)
+	if err != nil {
+		panic(err)
+	}
+
+	err = writer.Flush()
+	if err != nil {
+		panic(err)
+	}
+}
 
 func main() {
 	config := ParseCommandLine()
@@ -119,17 +190,16 @@ func main() {
 		os.Exit(1)
 	}
 
+	outputFP := CreateFile(config.OutputJSONFilePath)
+
 	flChan := make(chan FileLine)
 
 	fps := GetFilesOfExt(config.InputDirectoryPath, ".json")
 
 	go ReadLines(fps, flChan)
 
-	spinner := progressbar.Default(-1, "Iterating through files...")
+	wis := CreateWorkIndices(flChan)
 
-	for fl := range flChan {
-		_ = fl
-		spinner.Add(1)
-	}
+	WriteWorkIndicesToFile(outputFP, wis)
 
 }
