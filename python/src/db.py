@@ -17,68 +17,39 @@ from sqlalchemy import (
     text,
 )
 
-keys: List = [
-    "authorship_count",
-    "cited_by_count",
-    "concept_count",
-    "cr_type",
-    "created",
-    "distinct_country_count",
-    "doi",
-    "filepath",
-    "grant_count",
-    "id",
-    "institution_count",
-    "is_paratext",
-    "is_retracted",
-    "keyword_count",
-    "language",
-    "license",
-    "oa_type",
-    "oaid",
-    "publication_location_count",
-    "published",
-    "sustainable_development_goal_count",
-    "title",
-    "topic_count",
-    "updated",
-]
-
 
 class DB:
     def __init__(self, dbConn: Engine) -> None:
         self.dbConn: Engine = dbConn
         metadata: MetaData = MetaData()
 
-        worksSchema: Table = Table(
+        worksTableSchema: Table = Table(
             "works",
             metadata,
-            Column("oa_id", String),
+            Column("oaid", String),
             Column("doi", String),
-            Column("title", String),
-            Column("paratext", Boolean),
-            Column("retracted", Boolean),
-            Column("published", DateTime),
+            Column("authorship_count", Integer),
+            Column("cited_by_count", Integer),
+            Column("concept_count", Integer),
+            Column("cr_type", String),
+            Column("created", DateTime),
+            Column("distinct_country_count", Integer),
+            Column("filepath", String),
+            Column("grant_count", Integer),
+            Column("institution_count", Integer),
+            Column("is_paratext", Boolean),
+            Column("is_retracted", Boolean),
+            Column("keyword_count", Integer),
+            Column("language", String),
+            Column("license", String),
             Column("oa_type", String),
-            Column("cf_type", String),
-            PrimaryKeyConstraint("oa_id"),
-        )
-
-        citesSchema: Table = Table(
-            "cites",
-            metadata,
-            Column("id", Integer),
-            Column("work", String),
-            Column("reference", String),
-            PrimaryKeyConstraint("id"),
-            ForeignKeyConstraint(
-                columns=["work"],
-                refcolumns=["works.oa_id"],
-            ),
-            ForeignKeyConstraint(
-                columns=["reference"],
-                refcolumns=["works.oa_id"],
-            ),
+            Column("publication_location_count", Integer),
+            Column("published", DateTime),
+            Column("sustainable_development_goal_count", Integer),
+            Column("title", String),
+            Column("topic_count", Integer),
+            Column("updated", DateTime),
+            PrimaryKeyConstraint("oaid"),
         )
 
         metadata.create_all(bind=self.dbConn)

@@ -8,6 +8,7 @@ Steps
 
 from math import ceil
 from pathlib import Path
+from typing import List
 
 import click
 import pandas
@@ -15,6 +16,9 @@ from pandas import DataFrame
 from pandas.io.json._json import JsonReader
 from progress.bar import Bar
 from pyfs import isFile, resolvePath
+from sqlalchemy import Engine
+from src import createDBConnection, saveData
+from src.db import DB
 from src.shell import getJSONSize
 
 
@@ -50,6 +54,11 @@ def main(inputPath: Path, outputPath: Path, chunksize: int) -> None:
     assert isFile(path=absInputPath)
     assert isFile(path=absOutputPath) == False
 
+    doiSet: set = set([])
+
+    engine: Engine = createDBConnection(dbPath=absOutputPath)
+    db: DB = DB(dbConn=engine)
+
     print("Getting the total number of objects in the JSON file...")
     objCount: int = getJSONSize(fp=absInputPath)
 
@@ -64,6 +73,17 @@ def main(inputPath: Path, outputPath: Path, chunksize: int) -> None:
     ) as bar:
         for df in dfs:
             df.set_index(keys="id", inplace=True)
+
+            # Remove duplicate DOIs in the DataFrame
+            df = df[~df.duplicated(subset="doi", keep=False)]
+
+            # Make sure DOIs are not in the set of used DOIs
+            df = df[~df["doi"].isin(values=doiSet)]
+
+            # Add DOIs to doiSet
+            doiSet.update(df["doi"].to_list())
+
+            saveData(df=df, table="works", dbConn=engine)
             bar.next()
 
 
