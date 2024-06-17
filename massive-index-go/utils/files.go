@@ -6,12 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 )
-
-func CheckExtension(fp string, extension string) bool {
-	return filepath.Ext(fp) == extension
-}
 
 func OpenFile(fp string) *os.File {
 	var file *os.File
@@ -24,29 +19,6 @@ func OpenFile(fp string) *os.File {
 	}
 
 	return file
-}
-
-func ReadLines(fp *os.File, filepath string, outChannel chan types.File_Lines) {
-	reader := bufio.NewReader(fp)
-
-	for {
-		line, err := reader.ReadString('\n')
-
-		if err == io.EOF {
-			if len(line) > 0 {
-				outChannel <- types.File_Lines{Line: line, Filepath: filepath}
-			}
-			break
-		}
-
-		if err != nil {
-			panic(err)
-		}
-
-		outChannel <- types.File_Lines{Line: line, Filepath: filepath}
-	}
-
-	close(outChannel)
 }
 
 func CreateFile(fp string) *os.File {
@@ -74,4 +46,30 @@ func WriteJSONToFile(outputFP *os.File, data []byte) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func ReadLines(fps []*os.File, outChannel chan types.FileLine) {
+	for idx := range fps {
+		fpString := fps[idx].Name()
+		reader := bufio.NewReader(fps[idx])
+
+		for {
+			line, err := reader.ReadString('\n')
+
+			if err == io.EOF {
+				if len(line) > 0 {
+					outChannel <- types.FileLine{Line: line, Filepath: fpString}
+				}
+				break
+			}
+
+			if err != nil {
+				panic(err)
+			}
+
+			outChannel <- types.FileLine{Line: line, Filepath: fpString}
+		}
+		fps[idx].Close()
+	}
+	close(outChannel)
 }

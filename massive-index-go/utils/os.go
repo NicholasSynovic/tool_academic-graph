@@ -5,21 +5,44 @@ import (
 	"path/filepath"
 )
 
-func ListFilesInDirectory(directory string) ([]string, int) {
-	files := []string{}
-
-	directoryReader, err := os.ReadDir(directory)
-	if err != nil {
-		panic(err)
+func ValidateInputDirectory(directory string) bool {
+	fi, fiErr := os.Stat(directory)
+	if fiErr != nil {
+		panic(fiErr)
 	}
 
-	for _, file := range directoryReader {
-		if !file.IsDir() {
-			filename := file.Name()
-			fp, _ := filepath.Abs(directory + "/" + filename)
-			files = append(files, fp)
+	return fi.IsDir()
+}
+
+func ValidateOutputFile(filepath string) bool {
+	_, fiErr := os.Stat(filepath)
+	if fiErr != nil {
+		return true
+	}
+
+	return false
+}
+
+func GetFilesOfExt(directory string, ext string) []*os.File {
+	data := []*os.File{}
+
+	directoryReader, _ := os.ReadDir(directory)
+
+	for idx := range directoryReader {
+		fileName := directoryReader[idx].Name()
+		fileExt := filepath.Ext(fileName)
+
+		if fileExt == ext {
+			fpString := filepath.Join(directory, fileName)
+			fp, openErr := os.Open(fpString)
+
+			if openErr != nil {
+				panic(openErr)
+			}
+
+			data = append(data, fp)
 		}
 	}
 
-	return files, len(files)
+	return data
 }
