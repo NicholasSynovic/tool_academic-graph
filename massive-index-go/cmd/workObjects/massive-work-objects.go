@@ -3,7 +3,6 @@ package main
 import (
 	"NicholasSynovic/types"
 	"NicholasSynovic/utils"
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -143,17 +142,7 @@ func CreateWorkObjects(inChannel chan types.FileLine) []types.WorkObject {
 }
 func WriteWorkObjectsToFile(fp *os.File, data []types.WorkObject) {
 	dataBytes, _ := json.Marshal(data)
-
-	writer := bufio.NewWriter(fp)
-	_, err := writer.Write(dataBytes)
-	if err != nil {
-		panic(err)
-	}
-
-	err = writer.Flush()
-	if err != nil {
-		panic(err)
-	}
+	utils.WriteJSONToFile(fp, dataBytes)
 }
 
 func main() {

@@ -35,8 +35,9 @@ func CreateFile(fp string) *os.File {
 	return file
 }
 
-func WriteJSONToFile(outputFP *os.File, data []byte) {
-	writer := bufio.NewWriter(outputFP)
+func WriteJSONToFile(fp *os.File, data []byte) {
+	writer := bufio.NewWriter(fp)
+
 	_, err := writer.Write(data)
 	if err != nil {
 		panic(err)
@@ -46,6 +47,8 @@ func WriteJSONToFile(outputFP *os.File, data []byte) {
 	if err != nil {
 		panic(err)
 	}
+
+	fp.Close()
 }
 
 func ReadLines(fps []*os.File, outChannel chan types.FileLine) {
