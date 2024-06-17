@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"NicholasSynovic/types"
@@ -50,18 +50,18 @@ func writeToFile(filepathString string, data []types.Work_Index) {
 	fmt.Println("Wrote to " + filename)
 }
 
-func main() {
-	config := utils.ParseCommandLine()
+// func main() {
+// 	config := utils.ParseCommandLine()
 
-	lineChan := make(chan types.File_Lines, 1000000)
+// 	lineChan := make(chan types.File_Lines, 1000000)
 
-	outputJSONFP := utils.CreateFile(config.OutputJSONPath)
-	defer outputJSONFP.Close()
+// 	outputJSONFP := utils.CreateFile(config.OutputJSONPath)
+// 	defer outputJSONFP.Close()
 
-	readLines(config.OAWorkJSONDirectoryPath, lineChan)
+// 	readLines(config.OAWorkJSONDirectoryPath, lineChan)
 
-	workObjs, _ := utils.ConvertToWorkObjs(lineChan)
+// 	workObjs, _ := utils.ConvertToWorkObjs(lineChan)
 
-	writeToFile(config.OutputJSONPath, workObjs)
+// 	writeToFile(config.OutputJSONPath, workObjs)
 
-}
+// }
