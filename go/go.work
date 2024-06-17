@@ -1,8 +1,0 @@
-go 1.22.3
-
-use (
-	./cmd/citation_extractor
-	./cmd/document_extractor
-	./cmd/oaid_doi_mapper
-	./utils
-)
