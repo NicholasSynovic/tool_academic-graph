@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/schollz/progressbar/v3"
 )
@@ -22,11 +21,10 @@ type FileLine struct {
 	Line, Filepath string
 }
 
-type WorkIndex struct {
-	ID       int       `json:"id"`
-	OAID     string    `json:"oaid"`
-	UPDATED  time.Time `json:"updated"`
-	FILEPATH string    `json:"filepath"`
+type CitesRelation struct {
+	ID        int    `json:"id"`
+	Work_OAID string `json:"work_oaid"`
+	Ref_OAID  string `json:"ref_oaid"`
 }
 
 func ParseCommandLine() AppConfig {
@@ -34,7 +32,7 @@ func ParseCommandLine() AppConfig {
 
 	flag.StringVar(&config.InputDirectoryPath, "i", config.InputDirectoryPath, `Path to OpenAlex "Works" JSON directory`)
 
-	flag.StringVar(&config.OutputJSONFilePath, "o", config.OutputJSONFilePath, "JSON file to write OA Works Index to")
+	flag.StringVar(&config.OutputJSONFilePath, "o", config.OutputJSONFilePath, "JSON file to write OA Cites (Work -> Work) objects to")
 
 	flag.Parse()
 
@@ -112,8 +110,8 @@ func ReadLines(fps []*os.File, outChannel chan FileLine) {
 	close(outChannel)
 }
 
-func CreateWorkIndices(inChannel chan FileLine) []WorkIndex {
-	data := []WorkIndex{}
+func CreateCitesRelationships(inChannel chan FileLine) []CitesRelation {
+	data := []CitesRelation{}
 
 	idCounter := 0
 
@@ -130,19 +128,17 @@ func CreateWorkIndices(inChannel chan FileLine) []WorkIndex {
 		rawOAID, _ := jsonObj["id"].(string)
 		oaid := strings.Replace(rawOAID, "https://openalex.org/", "", -1)
 
-		updatedDateString, _ := jsonObj["updated_date"].(string)
-		updatedDate, _ := time.Parse("2006-01-02T15:04:05.000000", updatedDateString)
+		citedWorks := jsonObj["referenced_works"].([]interface{})
 
-		workIndexObj := WorkIndex{
-			ID:       idCounter,
-			OAID:     oaid,
-			UPDATED:  updatedDate,
-			FILEPATH: fl.Filepath,
+		for idx := range citedWorks {
+			rawReferenceOAID := citedWorks[idx].(string)
+			referenceOAID := strings.Replace(rawReferenceOAID, "https://openalex.org/", "", -1)
+
+			cr := CitesRelation{ID: idCounter, Work_OAID: oaid, Ref_OAID: referenceOAID}
+
+			data = append(data, cr)
+			idCounter += 1
 		}
-
-		data = append(data, workIndexObj)
-
-		idCounter += 1
 		spinner.Add(1)
 	}
 	return data
@@ -162,7 +158,7 @@ func CreateFile(fp string) *os.File {
 	return file
 }
 
-func WriteWorkIndicesToFile(fp *os.File, data []WorkIndex) {
+func WriteCitesRelationshipsToFile(fp *os.File, data []CitesRelation) {
 	dataBytes, _ := json.Marshal(data)
 
 	writer := bufio.NewWriter(fp)
@@ -198,8 +194,8 @@ func main() {
 
 	go ReadLines(fps, flChan)
 
-	wis := CreateWorkIndices(flChan)
+	cr := CreateCitesRelationships(flChan)
 
-	WriteWorkIndicesToFile(outputFP, wis)
+	WriteCitesRelationshipsToFile(outputFP, cr)
 
 }

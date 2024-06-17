@@ -290,7 +290,7 @@ func CreateFile(fp string) *os.File {
 }
 
 func WriteWorkObjectsToFile(fp *os.File, data []WorkObject) {
-	dataBytes, _ := json.MarshalIndent(data, "", "    ")
+	dataBytes, _ := json.Marshal(data)
 
 	writer := bufio.NewWriter(fp)
 	_, err := writer.Write(dataBytes)
