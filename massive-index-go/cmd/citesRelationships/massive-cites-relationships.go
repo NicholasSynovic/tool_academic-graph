@@ -1,6 +1,7 @@
 package main
 
 import (
+	"NicholasSynovic/types"
 	"bufio"
 	"encoding/json"
 	"flag"
@@ -13,22 +14,8 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
-type AppConfig struct {
-	InputDirectoryPath, OutputJSONFilePath string
-}
-
-type FileLine struct {
-	Line, Filepath string
-}
-
-type CitesRelation struct {
-	ID        int    `json:"id"`
-	Work_OAID string `json:"work_oaid"`
-	Ref_OAID  string `json:"ref_oaid"`
-}
-
-func ParseCommandLine() AppConfig {
-	config := AppConfig{InputDirectoryPath: ".", OutputJSONFilePath: "output.json"}
+func ParseCommandLine() types.AppConfig {
+	config := types.AppConfig{InputDirectoryPath: ".", OutputJSONFilePath: "output.json"}
 
 	flag.StringVar(&config.InputDirectoryPath, "i", config.InputDirectoryPath, `Path to OpenAlex "Works" JSON directory`)
 
@@ -84,7 +71,7 @@ func GetFilesOfExt(directory string, ext string) []*os.File {
 	return data
 }
 
-func ReadLines(fps []*os.File, outChannel chan FileLine) {
+func ReadLines(fps []*os.File, outChannel chan types.FileLine) {
 	for idx := range fps {
 		fpString := fps[idx].Name()
 		reader := bufio.NewReader(fps[idx])
@@ -94,7 +81,7 @@ func ReadLines(fps []*os.File, outChannel chan FileLine) {
 
 			if err == io.EOF {
 				if len(line) > 0 {
-					outChannel <- FileLine{Line: line, Filepath: fpString}
+					outChannel <- types.FileLine{Line: line, Filepath: fpString}
 				}
 				break
 			}
@@ -103,15 +90,15 @@ func ReadLines(fps []*os.File, outChannel chan FileLine) {
 				panic(err)
 			}
 
-			outChannel <- FileLine{Line: line, Filepath: fpString}
+			outChannel <- types.FileLine{Line: line, Filepath: fpString}
 		}
 		fps[idx].Close()
 	}
 	close(outChannel)
 }
 
-func CreateCitesRelationships(inChannel chan FileLine) []CitesRelation {
-	data := []CitesRelation{}
+func CreateCitesRelationships(inChannel chan types.FileLine) []types.CitesRelationship {
+	data := []types.CitesRelationship{}
 
 	idCounter := 0
 
@@ -134,7 +121,7 @@ func CreateCitesRelationships(inChannel chan FileLine) []CitesRelation {
 			rawReferenceOAID := citedWorks[idx].(string)
 			referenceOAID := strings.Replace(rawReferenceOAID, "https://openalex.org/", "", -1)
 
-			cr := CitesRelation{ID: idCounter, Work_OAID: oaid, Ref_OAID: referenceOAID}
+			cr := types.CitesRelationship{ID: idCounter, Work_OAID: oaid, Ref_OAID: referenceOAID}
 
 			data = append(data, cr)
 			idCounter += 1
@@ -158,7 +145,7 @@ func CreateFile(fp string) *os.File {
 	return file
 }
 
-func WriteCitesRelationshipsToFile(fp *os.File, data []CitesRelation) {
+func WriteCitesRelationshipsToFile(fp *os.File, data []types.CitesRelationship) {
 	dataBytes, _ := json.Marshal(data)
 
 	writer := bufio.NewWriter(fp)
@@ -188,7 +175,7 @@ func main() {
 
 	outputFP := CreateFile(config.OutputJSONFilePath)
 
-	flChan := make(chan FileLine)
+	flChan := make(chan types.FileLine)
 
 	fps := GetFilesOfExt(config.InputDirectoryPath, ".json")
 

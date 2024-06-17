@@ -1,6 +1,7 @@
 package main
 
 import (
+	"NicholasSynovic/types"
 	"bufio"
 	"encoding/json"
 	"flag"
@@ -14,23 +15,8 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
-type AppConfig struct {
-	InputDirectoryPath, OutputJSONFilePath string
-}
-
-type FileLine struct {
-	Line, Filepath string
-}
-
-type WorkIndex struct {
-	ID       int       `json:"id"`
-	OAID     string    `json:"oaid"`
-	UPDATED  time.Time `json:"updated"`
-	FILEPATH string    `json:"filepath"`
-}
-
-func ParseCommandLine() AppConfig {
-	config := AppConfig{InputDirectoryPath: ".", OutputJSONFilePath: "output.json"}
+func ParseCommandLine() types.AppConfig {
+	config := types.AppConfig{InputDirectoryPath: ".", OutputJSONFilePath: "output.json"}
 
 	flag.StringVar(&config.InputDirectoryPath, "i", config.InputDirectoryPath, `Path to OpenAlex "Works" JSON directory`)
 
@@ -86,7 +72,7 @@ func GetFilesOfExt(directory string, ext string) []*os.File {
 	return data
 }
 
-func ReadLines(fps []*os.File, outChannel chan FileLine) {
+func ReadLines(fps []*os.File, outChannel chan types.FileLine) {
 	for idx := range fps {
 		fpString := fps[idx].Name()
 		reader := bufio.NewReader(fps[idx])
@@ -96,7 +82,7 @@ func ReadLines(fps []*os.File, outChannel chan FileLine) {
 
 			if err == io.EOF {
 				if len(line) > 0 {
-					outChannel <- FileLine{Line: line, Filepath: fpString}
+					outChannel <- types.FileLine{Line: line, Filepath: fpString}
 				}
 				break
 			}
@@ -105,15 +91,15 @@ func ReadLines(fps []*os.File, outChannel chan FileLine) {
 				panic(err)
 			}
 
-			outChannel <- FileLine{Line: line, Filepath: fpString}
+			outChannel <- types.FileLine{Line: line, Filepath: fpString}
 		}
 		fps[idx].Close()
 	}
 	close(outChannel)
 }
 
-func CreateWorkIndices(inChannel chan FileLine) []WorkIndex {
-	data := []WorkIndex{}
+func CreateWorkIndices(inChannel chan types.FileLine) []types.WorkIndex {
+	data := []types.WorkIndex{}
 
 	idCounter := 0
 
@@ -133,7 +119,7 @@ func CreateWorkIndices(inChannel chan FileLine) []WorkIndex {
 		updatedDateString, _ := jsonObj["updated_date"].(string)
 		updatedDate, _ := time.Parse("2006-01-02T15:04:05.000000", updatedDateString)
 
-		workIndexObj := WorkIndex{
+		workIndexObj := types.WorkIndex{
 			ID:       idCounter,
 			OAID:     oaid,
 			UPDATED:  updatedDate,
@@ -162,7 +148,7 @@ func CreateFile(fp string) *os.File {
 	return file
 }
 
-func WriteWorkIndicesToFile(fp *os.File, data []WorkIndex) {
+func WriteWorkIndicesToFile(fp *os.File, data []types.WorkIndex) {
 	dataBytes, _ := json.Marshal(data)
 
 	writer := bufio.NewWriter(fp)
@@ -192,7 +178,7 @@ func main() {
 
 	outputFP := CreateFile(config.OutputJSONFilePath)
 
-	flChan := make(chan FileLine)
+	flChan := make(chan types.FileLine)
 
 	fps := GetFilesOfExt(config.InputDirectoryPath, ".json")
 

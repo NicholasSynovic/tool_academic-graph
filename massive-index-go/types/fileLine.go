@@ -1,5 +1,5 @@
 package types
 
-type File_Lines struct {
+type FileLine struct {
 	Line, Filepath string
 }

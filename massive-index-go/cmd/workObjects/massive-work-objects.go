@@ -1,6 +1,7 @@
 package main
 
 import (
+	"NicholasSynovic/types"
 	"bufio"
 	"encoding/json"
 	"flag"
@@ -14,56 +15,8 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
-type AppConfig struct {
-	InputDirectoryPath, OutputJSONFilePath string
-}
-
-type FileLine struct {
-	Line, Filepath string
-}
-
-type WorkObject struct {
-	// IDs
-	ID   int    `json:"id"`
-	DOI  string `json:"doi"`
-	OAID string `json:"oaid"`
-
-	// Dates
-	UPDATED   time.Time `json:"updated"`
-	CREATED   time.Time `json:"created"`
-	PUBLISHED time.Time `json:"published"`
-
-	// Authorships
-	AUTHORSHIP_COUNT       int `json:"authorship_count"`
-	INSTITUTION_COUNT      int `json:"institution_count"`
-	DISTINCT_COUNTRY_COUNT int `json:"distinct_country_count"`
-
-	// Categories
-	CONCEPT_COUNT int    `json:"concept_count"`
-	KEYWORD_COUNT int    `json:"keyword_count"`
-	GRANT_COUNT   int    `json:"grant_count"`
-	TOPIC_COUNT   int    `json:"topic_count"`
-	IS_PARATEXT   bool   `json:"is_paratext"`
-	IS_RETRACTED  bool   `json:"is_retracted"`
-	LANGUAGE      string `json:"language"`
-	LICENSE       string `json:"license"`
-
-	// Publication Metrics
-	CITED_BY_COUNT             int `json:"cited_by_count"`
-	PUBLICATION_LOCATION_COUNT int `json:"publication_location_count"`
-
-	// Document Metrics
-	SUSTAINABLE_DEVELOPMENT_GOAL_COUNT int    `json:"sustainable_development_goal_count"`
-	TITLE                              string `json:"title"`
-	OA_TYPE                            string `json:"oa_type"`
-	CR_TYPE                            string `json:"cr_type"`
-
-	// Meta
-	FILEPATH string `json:"filepath"`
-}
-
-func ParseCommandLine() AppConfig {
-	config := AppConfig{InputDirectoryPath: ".", OutputJSONFilePath: "output.json"}
+func ParseCommandLine() types.AppConfig {
+	config := types.AppConfig{InputDirectoryPath: ".", OutputJSONFilePath: "output.json"}
 
 	flag.StringVar(&config.InputDirectoryPath, "i", config.InputDirectoryPath, `Path to OpenAlex "Works" JSON directory`)
 
@@ -119,7 +72,7 @@ func GetFilesOfExt(directory string, ext string) []*os.File {
 	return data
 }
 
-func ReadLines(fps []*os.File, outChannel chan FileLine) {
+func ReadLines(fps []*os.File, outChannel chan types.FileLine) {
 	for idx := range fps {
 		fpString := fps[idx].Name()
 		reader := bufio.NewReader(fps[idx])
@@ -129,7 +82,7 @@ func ReadLines(fps []*os.File, outChannel chan FileLine) {
 
 			if err == io.EOF {
 				if len(line) > 0 {
-					outChannel <- FileLine{Line: line, Filepath: fpString}
+					outChannel <- types.FileLine{Line: line, Filepath: fpString}
 				}
 				break
 			}
@@ -138,17 +91,17 @@ func ReadLines(fps []*os.File, outChannel chan FileLine) {
 				panic(err)
 			}
 
-			outChannel <- FileLine{Line: line, Filepath: fpString}
+			outChannel <- types.FileLine{Line: line, Filepath: fpString}
 		}
 		fps[idx].Close()
 	}
 	close(outChannel)
 }
 
-func CreateWorkObjects(inChannel chan FileLine) []WorkObject {
+func CreateWorkObjects(inChannel chan types.FileLine) []types.WorkObject {
 	ERROR_STRING := "!error"
 
-	data := []WorkObject{}
+	data := []types.WorkObject{}
 
 	idCounter := 0
 
@@ -228,7 +181,7 @@ func CreateWorkObjects(inChannel chan FileLine) []WorkObject {
 		crType := jsonObj["type_crossref"].(string)
 
 		// ===Work Object===
-		workObject := WorkObject{
+		workObject := types.WorkObject{
 			// IDs
 			ID:   idCounter,
 			OAID: oaid,
@@ -289,7 +242,7 @@ func CreateFile(fp string) *os.File {
 	return file
 }
 
-func WriteWorkObjectsToFile(fp *os.File, data []WorkObject) {
+func WriteWorkObjectsToFile(fp *os.File, data []types.WorkObject) {
 	dataBytes, _ := json.Marshal(data)
 
 	writer := bufio.NewWriter(fp)
@@ -319,7 +272,7 @@ func main() {
 
 	outputFP := CreateFile(config.OutputJSONFilePath)
 
-	flChan := make(chan FileLine)
+	flChan := make(chan types.FileLine)
 
 	fps := GetFilesOfExt(config.InputDirectoryPath, ".json")
 
