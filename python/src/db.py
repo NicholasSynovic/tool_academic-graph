@@ -52,6 +52,17 @@ class DB:
             PrimaryKeyConstraint("oaid"),
         )
 
+        citesRelationshipTableSchema: Table = Table(
+            "relationship_cites",
+            metadata,
+            Column("id", Integer),
+            Column("work_oaid", String),
+            Column("ref_oaid", String),
+            PrimaryKeyConstraint("id"),
+            ForeignKeyConstraint("work_oaid", "works.oaid"),
+            ForeignKeyConstraint("ref_oaid", "works.oaid"),
+        )
+
         metadata.create_all(bind=self.dbConn)
 
     def getLargestCitesID(self) -> int:
