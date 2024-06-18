@@ -44,7 +44,6 @@ def main(inputPath: Path, outputPath: Path, chunksize: int) -> None:
     absOutputPath: Path = resolvePath(path=outputPath)
 
     assert isFile(path=absInputPath)
-    assert isFile(path=absOutputPath) == False
 
     engine: Engine = createDBConnection(dbPath=absOutputPath)
     db: DB = DB(dbConn=engine)

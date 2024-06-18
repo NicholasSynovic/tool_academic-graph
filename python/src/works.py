@@ -44,7 +44,6 @@ def main(inputPath: Path, outputPath: Path, chunksize: int) -> None:
     absOutputPath: Path = resolvePath(path=outputPath)
 
     assert isFile(path=absInputPath)
-    assert isFile(path=absOutputPath) == False
 
     doiSet: set = set([])
 

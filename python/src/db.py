@@ -59,8 +59,7 @@ class DB:
             Column("work_oaid", String),
             Column("ref_oaid", String),
             PrimaryKeyConstraint("id"),
-            ForeignKeyConstraint("work_oaid", "works.oaid"),
-            ForeignKeyConstraint("ref_oaid", "works.oaid"),
+            ForeignKeyConstraint(["work_oaid", "ref_oaid"], ["works.oaid"]),
         )
 
         metadata.create_all(bind=self.dbConn)
