@@ -1,11 +1,3 @@
-"""
-Steps
-
-5. Get the length of the JSON file from JQ
-6. Read in JSON file as chunks into Pandas DFS
-7. Pass each chunk into SQLite3 db
-"""
-
 from math import ceil
 from pathlib import Path
 from typing import List
@@ -66,6 +58,7 @@ def main(inputPath: Path, outputPath: Path, chunksize: int) -> None:
         path_or_buf=absInputPath,
         lines=True,
         chunksize=chunksize,
+        compression="infer",
     )
 
     with Bar(
