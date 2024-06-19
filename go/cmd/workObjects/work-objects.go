@@ -18,7 +18,7 @@ func CreateWorkObjects(inChannel chan types.FileLine) []types.WorkObject {
 
 	idCounter := 0
 
-	spinner := progressbar.Default(-1, "Creating JSON objs...")
+	spinner := progressbar.Default(-1, "Creating types.WorkObject...")
 
 	for fl := range inChannel {
 		var jsonObj map[string]any

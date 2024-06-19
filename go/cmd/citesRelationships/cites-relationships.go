@@ -15,7 +15,7 @@ func CreateCitesRelationships(inChannel chan types.FileLine) []types.CitesRelati
 
 	idCounter := 0
 
-	spinner := progressbar.Default(-1, "Creating JSON objs...")
+	spinner := progressbar.Default(-1, "Creating types.CitesRelationship...")
 
 	for fl := range inChannel {
 		var jsonObj map[string]any

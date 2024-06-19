@@ -16,7 +16,7 @@ func CreateWorkIndices(inChannel chan types.FileLine) []types.WorkIndex {
 
 	idCounter := 0
 
-	spinner := progressbar.Default(-1, "Creating JSON objs...")
+	spinner := progressbar.Default(-1, "Creating types.WorkIndex...")
 
 	for fl := range inChannel {
 		var jsonObj map[string]any
