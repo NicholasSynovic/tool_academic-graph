@@ -12,7 +12,7 @@ import (
 )
 
 func CreateAuthorObjects(inChannel chan types.FileLine) []types.AuthorObject {
-	ERROR_STRING := "!error"
+	// ERROR_STRING := "!error"
 
 	data := []types.AuthorObject{}
 
@@ -33,8 +33,8 @@ func CreateAuthorObjects(inChannel chan types.FileLine) []types.AuthorObject {
 		rawOAID, _ := jsonObj["id"].(string)
 		oaid := utils.CleanOAID(rawOAID)
 
-		rawDOI, _ := jsonObj["doi"].(string)
-		doi := utils.CleanDOI(rawDOI)
+		rawORCID, _ := jsonObj["orcid"].(string)
+		orcid := utils.CleanDOI(rawORCID)
 
 		// ===Dates===
 
@@ -44,103 +44,64 @@ func CreateAuthorObjects(inChannel chan types.FileLine) []types.AuthorObject {
 		createdDateString, _ := jsonObj["created_date"].(string)
 		createdDate, _ := time.Parse("2006-01-02", createdDateString)
 
-		publishedDateString, _ := jsonObj["publication_date"].(string)
-		publishedDate, _ := time.Parse("2006-01-02", publishedDateString)
+		// ===Counts===
 
-		// ===Authorships===
+		affiliationCount := len(jsonObj["affiliations"].([]interface{}))
 
-		authorshipCount := len(jsonObj["authorships"].([]interface{}))
+		citationCount := int(jsonObj["cited_by_count"].(float64))
 
-		institutionCount := jsonObj["institutions_distinct_count"].(float64)
+		worksCount := int(jsonObj["works_count"].(float64))
 
-		distinctCountryCount := jsonObj["countries_distinct_count"].(float64)
+		// ===Author Information===
 
-		// ===Categories===
+		displayName := jsonObj["display_name"].(string)
 
-		conceptsCount := len(jsonObj["concepts"].([]interface{}))
+		// ===Metrics===
 
-		keywordCount := len(jsonObj["keywords"].([]interface{}))
+		summaryStats := jsonObj["summary_stats"].(map[string]any)
 
-		grantCount := len(jsonObj["grants"].([]interface{}))
+		impactFactor := summaryStats["2yr_mean_citedness"].(float64)
 
-		isParatext := jsonObj["is_paratext"].(bool)
-		isRetracted := jsonObj["is_retracted"].(bool)
+		hIndex := int(summaryStats["h_index"].(float64))
 
-		language, languageErr := jsonObj["language"].(string)
-		if !languageErr {
-			language = ERROR_STRING
-		}
-
-		license, licenseErr := jsonObj["license"].(string)
-		if !licenseErr {
-			license = ERROR_STRING
-		}
-
-		// ===Publication Metrics===
-
-		citedByCount := jsonObj["cited_by_count"].(float64)
-		publicationLocationCount := jsonObj["locations_count"].(float64)
-
-		// ===Document Metrics===
-
-		sdgCount := len(jsonObj["sustainable_development_goals"].([]interface{}))
-
-		title, titleErr := jsonObj["title"].(string)
-		if !titleErr {
-			title = ERROR_STRING
-		}
-
-		oaType := jsonObj["type"].(string)
-		crType := jsonObj["type_crossref"].(string)
+		i10Index := int(summaryStats["i10_index"].(float64))
 
 		// ===Work Object===
-		workObject := types.WorkObject{
+		authorObject := types.AuthorObject{
 			// IDs
-			ID:   idCounter,
-			OAID: oaid,
-			DOI:  doi,
+			ID:    idCounter,
+			OAID:  oaid,
+			ORCID: orcid,
 
 			// Dates
-			UPDATED:   updatedDate,
-			CREATED:   createdDate,
-			PUBLISHED: publishedDate,
+			UPDATED: updatedDate,
+			CREATED: createdDate,
 
-			// Authorships
-			AUTHORSHIP_COUNT:       authorshipCount,
-			INSTITUTION_COUNT:      int(institutionCount),
-			DISTINCT_COUNTRY_COUNT: int(distinctCountryCount),
+			// Counts
+			AFFILIATION_COUNT: affiliationCount,
+			CITATION_COUNT:    citationCount,
+			WORKS_COUNT:       worksCount,
 
-			// Categories
-			CONCEPT_COUNT: conceptsCount,
-			KEYWORD_COUNT: keywordCount,
-			GRANT_COUNT:   grantCount,
-			IS_PARATEXT:   isParatext,
-			IS_RETRACTED:  isRetracted,
-			LANGUAGE:      language,
-			LICENSE:       license,
+			// Author Information
+			DISPLAY_NAME: displayName,
 
-			// Publication Metrics
-			CITED_BY_COUNT:             int(citedByCount),
-			PUBLICATION_LOCATION_COUNT: int(publicationLocationCount),
-
-			// Document Metrics
-			SUSTAINABLE_DEVELOPMENT_GOAL_COUNT: sdgCount,
-			TITLE:                              title,
-			OA_TYPE:                            oaType,
-			CR_TYPE:                            crType,
+			// Metrics
+			IMPACT_FACTOR: impactFactor,
+			H_INDEX:       hIndex,
+			I10_INDEX:     i10Index,
 
 			// Meta
 			FILEPATH: fl.Filepath,
 		}
 
-		data = append(data, workObject)
+		data = append(data, authorObject)
 
 		idCounter += 1
 		spinner.Add(1)
 	}
 	return data
 }
-func WriteWorkObjectsToFile(fp *os.File, data []types.WorkObject) {
+func WriteAuthorObjectsToFile(fp *os.File, data []types.AuthorObject) {
 	bar := progressbar.Default(int64(len(data)), "Writing to file...")
 
 	for _, record := range data {
@@ -180,8 +141,8 @@ func main() {
 
 	go utils.ReadLines(fps, flChan)
 
-	wo := CreateWorkObjects(flChan)
+	ao := CreateAuthorObjects(flChan)
 
-	WriteWorkObjectsToFile(outputFP, wo)
+	WriteAuthorObjectsToFile(outputFP, ao)
 
 }

@@ -22,3 +22,7 @@ func CleanOAID(oaid string) string {
 func CleanDOI(doi string) string {
 	return cleanText(doi, "https://doi.org/")
 }
+
+func CleanORCID(doi string) string {
+	return cleanText(doi, "https://orcid.org/")
+}
