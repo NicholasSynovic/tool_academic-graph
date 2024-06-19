@@ -21,7 +21,7 @@ type AuthorObject struct {
 	DISPLAY_NAME string `json:"display_name"`
 
 	// Metrics
-	IMPACT_FACTOR float64 `json:"imapct_factor"`
+	IMPACT_FACTOR float64 `json:"impact_factor"`
 	H_INDEX       int     `json:"h_index"`
 	I10_INDEX     int     `json:"i10_index"`
 
