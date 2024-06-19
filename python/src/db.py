@@ -6,6 +6,7 @@ from sqlalchemy import (
     CursorResult,
     DateTime,
     Engine,
+    Float,
     ForeignKeyConstraint,
     Integer,
     MetaData,
@@ -52,6 +53,25 @@ class DB:
             PrimaryKeyConstraint("oaid"),
         )
 
+        authorTableSchema: Table = Table(
+            "authors",
+            metadata,
+            Column("oaid", String),
+            Column("orcid", String),
+            Column("display_name", String),
+            Column("affiliation_count", Integer),
+            Column("citation_count", Integer),
+            Column("concept_count", Integer),
+            Column("works_count", Integer),
+            Column("h_index", Integer),
+            Column("i10_index", Integer),
+            Column("impact_factor", Float),
+            Column("created", DateTime),
+            Column("updated", DateTime),
+            Column("filepath", String),
+            PrimaryKeyConstraint("oaid"),
+        )
+
         citesRelationshipTableSchema: Table = Table(
             "relationship_cites",
             metadata,
@@ -61,6 +81,17 @@ class DB:
             PrimaryKeyConstraint("id"),
             ForeignKeyConstraint(["work_oaid"], ["works.oaid"]),
             ForeignKeyConstraint(["ref_oaid"], ["works.oaid"]),
+        )
+
+        authorshipRelationshipTableSchema: Table = Table(
+            "relationship_authorship",
+            metadata,
+            Column("id", Integer),
+            Column("author_oaid", String),
+            Column("work_oaid", String),
+            PrimaryKeyConstraint("id"),
+            ForeignKeyConstraint(["author_oaid"], ["authors.oaid"]),
+            ForeignKeyConstraint(["work_oaid"], ["works.oaid"]),
         )
 
         metadata.create_all(bind=self.dbConn)
