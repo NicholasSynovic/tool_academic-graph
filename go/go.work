@@ -2,6 +2,7 @@ go 1.22.3
 
 use (
 	./cmd
+	./cmd/authorObjects
 	./cmd/citesRelationships
 	./cmd/workIndex
 	./cmd/workObjects

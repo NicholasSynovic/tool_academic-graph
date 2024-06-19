@@ -1,4 +1,4 @@
-module NicholasSynovic/massive-work-objects
+module NicholasSynovic/work-objects
 
 go 1.22.3
 

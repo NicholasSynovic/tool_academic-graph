@@ -1,4 +1,4 @@
-module NicholasSynovic/massive-cites-relationships
+module NicholasSynovic/cites-relationships
 
 go 1.22.3
 
