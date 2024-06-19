@@ -45,8 +45,6 @@ def main(inputPath: Path, outputPath: Path, chunksize: int) -> None:
 
     assert isFile(path=absInputPath)
 
-    authorsSet: set = set([])
-
     engine: Engine = createDBConnection(dbPath=absOutputPath)
     db: DB = DB(dbConn=engine)
 
@@ -65,16 +63,6 @@ def main(inputPath: Path, outputPath: Path, chunksize: int) -> None:
     ) as bar:
         for df in dfs:
             df.set_index(keys="id", inplace=True)
-
-            # Remove duplicate ORCIDs in the DataFrame
-            df = df[~df.duplicated(subset="orcid", keep=False)]
-
-            # Make sure ORCIDs are not in the set of used DOIs
-            df = df[~df["orcid"].isin(values=authorsSet)]
-
-            # Add ORCIDs to orcidSet
-            authorsSet.update(df["orcid"].to_list())
-
             saveData(df=df, table="authors", dbConn=engine)
             bar.next()
 
