@@ -34,7 +34,7 @@ func CreateAuthorObjects(inChannel chan types.FileLine) []types.AuthorObject {
 		oaid := utils.CleanOAID(rawOAID)
 
 		rawORCID, _ := jsonObj["orcid"].(string)
-		orcid := utils.CleanDOI(rawORCID)
+		orcid := utils.CleanORCID(rawORCID)
 
 		// ===Dates===
 
