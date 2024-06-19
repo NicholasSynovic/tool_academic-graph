@@ -63,7 +63,12 @@ def main(inputPath: Path, outputPath: Path, chunksize: int) -> None:
     ) as bar:
         for df in dfs:
             df.set_index(keys="id", inplace=True)
-            saveData(df=df, table="cites", dbConn=engine, includeIndex=True)
+            saveData(
+                df=df,
+                table="relationship_cites",
+                dbConn=engine,
+                includeIndex=True,
+            )
             bar.next()
 
 
