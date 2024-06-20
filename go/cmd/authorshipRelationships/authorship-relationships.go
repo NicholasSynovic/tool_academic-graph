@@ -44,6 +44,7 @@ func CreateAuthorshipRelationships(inChannel chan types.FileLine) []types.Author
 		}
 		spinner.Add(1)
 	}
+	spinner.Exit()
 	return data
 }
 
@@ -61,9 +62,9 @@ func WriteAuthorshipRelationshipToFile(fp *os.File, data []types.AuthorshipRelat
 			fmt.Println("Error writing to file:", err)
 			return
 		}
-
 		bar.Add(1)
 	}
+	bar.Exit()
 }
 
 func main() {

@@ -43,6 +43,7 @@ func CreateFundsRelationships(inChannel chan types.FileLine) []types.FundsRelati
 		}
 		spinner.Add(1)
 	}
+	spinner.Exit()
 	return data
 }
 
@@ -60,9 +61,9 @@ func WriteFundsRelationshipsToFile(fp *os.File, data []types.FundsRelationship) 
 			fmt.Println("Error writing to file:", err)
 			return
 		}
-
 		bar.Add(1)
 	}
+	bar.Exit()
 }
 
 func main() {

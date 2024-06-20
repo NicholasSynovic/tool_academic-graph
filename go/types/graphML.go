@@ -6,8 +6,8 @@ type GraphML struct {
 	XMLName xml.Name `xml:"graphml"`
 	Xmlns   string   `xml:"xmlns,attr"`
 
-	KEYS   []Key `xml:"key`
-	Graphs Graph `xml:"graph"`
+	KEYS  []Key `xml:"key`
+	GRAPH Graph `xml:"graph"`
 }
 
 type Key struct {

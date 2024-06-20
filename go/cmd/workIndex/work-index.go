@@ -44,6 +44,7 @@ func CreateWorkIndices(inChannel chan types.FileLine) []types.WorkIndex {
 		idCounter += 1
 		spinner.Add(1)
 	}
+	spinner.Exit()
 	return data
 }
 
@@ -61,9 +62,9 @@ func WriteWorkIndicesToFile(fp *os.File, data []types.WorkIndex) {
 			fmt.Println("Error writing to file:", err)
 			return
 		}
-
 		bar.Add(1)
 	}
+	bar.Exit()
 }
 
 func main() {

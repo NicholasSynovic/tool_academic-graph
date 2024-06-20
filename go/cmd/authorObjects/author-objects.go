@@ -99,6 +99,7 @@ func CreateAuthorObjects(inChannel chan types.FileLine) []types.AuthorObject {
 		idCounter += 1
 		spinner.Add(1)
 	}
+	spinner.Exit()
 	return data
 }
 func WriteAuthorObjectsToFile(fp *os.File, data []types.AuthorObject) {
@@ -115,9 +116,9 @@ func WriteAuthorObjectsToFile(fp *os.File, data []types.AuthorObject) {
 			fmt.Println("Error writing to file:", err)
 			return
 		}
-
 		bar.Add(1)
 	}
+	bar.Exit()
 }
 
 func main() {

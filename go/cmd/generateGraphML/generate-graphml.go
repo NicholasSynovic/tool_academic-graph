@@ -8,6 +8,7 @@ import (
 	"os"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/schollz/progressbar/v3"
 )
 
 func getWorkRows(dbConn *sql.DB) *sql.Rows {
@@ -93,6 +94,32 @@ func createEdgesFromCitesRows(citesRows *sql.Rows, outChannel chan types.Edge) {
 	close(outChannel)
 }
 
+func BufferWorkNodes(inChannel chan types.Node) []types.Node {
+	data := []types.Node{}
+
+	spinner := progressbar.Default(-1, "Buffering work nodes...")
+
+	for node := range inChannel {
+		data = append(data, node)
+		spinner.Add(1)
+	}
+	spinner.Exit()
+	return data
+}
+
+func BufferCitesEdges(inChannel chan types.Edge) []types.Edge {
+	data := []types.Edge{}
+
+	spinner := progressbar.Default(-1, "Buffering cites edges...")
+
+	for node := range inChannel {
+		data = append(data, node)
+		spinner.Add(1)
+	}
+	spinner.Exit()
+	return data
+}
+
 func main() {
 	config := utils.ParseCommandLine_GraphML()
 
@@ -108,6 +135,8 @@ func main() {
 
 	outputFP := utils.CreateFile(config.OutputXMLFilePath)
 	defer outputFP.Close()
+
+	graphMLKeys := utils.GenerateGraphMLKeys()
 
 	nodeChannel := make(chan types.Node)
 	edgeChannel := make(chan types.Edge)
@@ -125,14 +154,21 @@ func main() {
 
 	go createEdgesFromCitesRows(citesRows, edgeChannel)
 
-	// nodeMap := utils.BufferNodes(nodeChannel)
-	// nodes := utils.MapToNodeSlice(nodeMap)
+	workNodes := BufferWorkNodes(nodeChannel)
 
-	// go utils.WriteEdgesToChannel(rows, nodeMap, edgeChannel)
+	citesEdges := BufferCitesEdges(edgeChannel)
 
-	// edges := utils.BufferEdges(edgeChannel)
+	graph := types.Graph{
+		ID:           "G",
+		EDGE_DEFAULT: "directed",
+		NODES:        workNodes,
+		EDGES:        citesEdges}
 
-	// graphML := utils.CreateGraphML(nodes, edges)
+	graphML := types.GraphML{
+		Xmlns: "http://graphml.graphdrawing.org/xmlns",
+		KEYS:  graphMLKeys,
+		GRAPH: graph,
+	}
 
-	// utils.WriteGraphMLToFile(outputFP, graphML)
+	utils.WriteGraphMLToFile(outputFP, graphML)
 }

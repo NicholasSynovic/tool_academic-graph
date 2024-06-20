@@ -43,6 +43,7 @@ func CreateKeywordRelationships(inChannel chan types.FileLine) []types.KeywordRe
 		}
 		spinner.Add(1)
 	}
+	spinner.Exit()
 	return data
 }
 
@@ -60,9 +61,9 @@ func WriteKeywordRelationshipsToFile(fp *os.File, data []types.KeywordRelationsh
 			fmt.Println("Error writing to file:", err)
 			return
 		}
-
 		bar.Add(1)
 	}
+	bar.Exit()
 }
 
 func main() {

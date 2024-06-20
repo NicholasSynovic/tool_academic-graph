@@ -167,3 +167,5 @@ go/bin/*
 *.json
 *.dump
 *.tar.gz
+*.xml
+*.gz
