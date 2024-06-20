@@ -14,7 +14,7 @@ func ValidateInputDirectory(directory string) bool {
 	return fi.IsDir()
 }
 
-func ValidateOutputFile(filepath string) bool {
+func ValidateFileExistence(filepath string) bool {
 	_, fiErr := os.Stat(filepath)
 	if fiErr != nil {
 		return true

@@ -128,7 +128,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if !utils.ValidateOutputFile(config.OutputJSONFilePath) {
+	if !utils.ValidateFileExistence(config.OutputJSONFilePath) {
 		fmt.Printf("%s is a file\n", config.OutputJSONFilePath)
 		os.Exit(1)
 	}

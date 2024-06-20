@@ -3,6 +3,8 @@ package main
 import (
 	"NicholasSynovic/types"
 	"NicholasSynovic/utils"
+	"fmt"
+	"os"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -10,12 +12,24 @@ import (
 func main() {
 	config := utils.ParseCommandLine_GraphML()
 
-	sqlQuery_GetUniqueWorks := "SELECT DISTINCT work FROM cites"
-	sqlQuery_GetRows := `SELECT work, reference
-	FROM cites
-	WHERE reference IN (
-		SELECT work FROM cites
+	if utils.ValidateFileExistence(config.InputSQLite3DBPath) == false{
+		fmt.Printf("%s is not a file\n", config.InputSQLite3DBPath)
+		os.Exit(1)
+
+	if !utils.ValidateFileExistence(config.OutputXMLFilePath) {
+		fmt.Printf("%s is a file\n", config.OutputXMLFilePath)
+		os.Exit(1)
+	}
+
+	sqlQuery_GetUniqueWorks := "SELECT DISTINCT work_oaid FROM relationship_cites"
+	sqlQuery_GetRows := `SELECT work_oaid, ref_oaid
+	FROM relationship_cites
+	WHERE ref_oaid IN (
+		SELECT work_oaid FROM relationship_cites
 		);`
+
+	outputFP := utils.CreateFile(config.OutputXMLFilePath)
+	defer outputFP.Close()
 
 	nodeChannel := make(chan types.Node)
 	edgeChannel := make(chan types.Edge)
@@ -37,7 +51,6 @@ func main() {
 
 	graphML := utils.CreateGraphML(nodes, edges)
 
-	fp := utils.CreateFile(config.OutputXMLFilePath)
 	defer fp.Close()
 
 	utils.WriteGraphMLToFile(fp, graphML)
