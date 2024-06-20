@@ -6,6 +6,7 @@ use (
 	./cmd/authorshipRelationships
 	./cmd/citesRelationships
 	./cmd/fundsRelationships
+	./cmd/generateGraphML
 	./cmd/keywordsRelationships
 	./cmd/workIndex
 	./cmd/workObjects

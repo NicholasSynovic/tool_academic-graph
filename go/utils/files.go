@@ -3,6 +3,7 @@ package utils
 import (
 	"NicholasSynovic/types"
 	"bufio"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"os"
@@ -35,22 +36,6 @@ func CreateFile(fp string) *os.File {
 	return file
 }
 
-func WriteJSONToFile(fp *os.File, data []byte) {
-	writer := bufio.NewWriter(fp)
-
-	_, err := writer.Write(data)
-	if err != nil {
-		panic(err)
-	}
-
-	err = writer.Flush()
-	if err != nil {
-		panic(err)
-	}
-
-	fp.Close()
-}
-
 func ReadLines(fps []*os.File, outChannel chan types.FileLine) {
 	for idx := range fps {
 		fpString := fps[idx].Name()
@@ -75,4 +60,33 @@ func ReadLines(fps []*os.File, outChannel chan types.FileLine) {
 		fps[idx].Close()
 	}
 	close(outChannel)
+}
+
+func WriteJSONToFile(fp *os.File, data []byte) {
+	writer := bufio.NewWriter(fp)
+
+	_, err := writer.Write(data)
+	if err != nil {
+		panic(err)
+	}
+
+	err = writer.Flush()
+	if err != nil {
+		panic(err)
+	}
+
+	fp.Close()
+}
+
+func WriteGraphMLToFile(fp *os.File, gml types.GraphML) {
+	encoder := xml.NewEncoder(fp)
+	encoder.Indent("", "  ")
+
+	err := encoder.Encode(gml)
+
+	if err != nil {
+		panic(err)
+	}
+
+	fp.Close()
 }
