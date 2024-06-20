@@ -5,6 +5,7 @@ use (
 	./cmd/authorObjects
 	./cmd/authorshipRelationships
 	./cmd/citesRelationships
+	./cmd/fundsRelationships
 	./cmd/workIndex
 	./cmd/workObjects
 	./types
