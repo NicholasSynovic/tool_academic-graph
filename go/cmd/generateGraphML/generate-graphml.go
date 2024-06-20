@@ -87,6 +87,7 @@ func createEdgesFromCitesRows(citesRows *sql.Rows, outChannel chan types.Edge) {
 			ID:     edgeID,
 			SOURCE: work_oaid,
 			TARGET: ref_oaid,
+			LABEL:  edgeLabel,
 			DATA:   data}
 
 		counter += 1
