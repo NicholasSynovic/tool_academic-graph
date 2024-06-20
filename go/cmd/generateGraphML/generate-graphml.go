@@ -35,6 +35,8 @@ func createNodesFromWorkRows(workRows *sql.Rows, outChannel chan types.Node) {
 		var doi string
 		var updated string
 
+		data := []types.Data{}
+
 		nodeID := fmt.Sprintf("n%d", counter)
 
 		workRows.Scan(&oaid, &doi, &updated)
@@ -50,13 +52,41 @@ func createNodesFromWorkRows(workRows *sql.Rows, outChannel chan types.Node) {
 			KEY: "updated",
 			VAL: updated}
 
+		data = append(data, labelData, oaidData, doiData, updatedData)
+
 		outChannel <- types.Node{
-			ID:         nodeID,
-			LABELS:     workNodeLabel,
-			LABEL_DATA: labelData,
-			OAID_DATA:  oaidData,
-			DOI_DATA:   doiData,
-			UPDATED:    updatedData}
+			ID:     nodeID,
+			LABELS: workNodeLabel,
+			DATA:   data}
+
+		counter += 1
+	}
+	close(outChannel)
+}
+
+func createEdgesFromCitesRows(citesRows *sql.Rows, outChannel chan types.Edge) {
+	edgeLabel := "CITES"
+	counter := 0
+
+	for citesRows.Next() {
+		var work_oaid string
+		var ref_oaid string
+
+		data := []types.Data{}
+
+		edgeID := fmt.Sprintf("e%d", counter)
+
+		citesRows.Scan(&work_oaid, &ref_oaid)
+
+		labelData := types.Data{KEY: "label", VAL: edgeLabel}
+
+		data = append(data, labelData)
+
+		outChannel <- types.Edge{
+			ID:     edgeID,
+			SOURCE: work_oaid,
+			TARGET: ref_oaid,
+			DATA:   data}
 
 		counter += 1
 	}
@@ -80,7 +110,7 @@ func main() {
 	defer outputFP.Close()
 
 	nodeChannel := make(chan types.Node)
-	// edgeChannel := make(chan types.Edge)
+	edgeChannel := make(chan types.Edge)
 
 	dbConn := utils.ConnectToSQLite3DB(config.InputSQLite3DBPath)
 	defer dbConn.Close()
@@ -93,9 +123,7 @@ func main() {
 
 	go createNodesFromWorkRows(workRows, nodeChannel)
 
-	for node := range nodeChannel {
-		fmt.Println(node.ID)
-	}
+	go createEdgesFromCitesRows(citesRows, edgeChannel)
 
 	// nodeMap := utils.BufferNodes(nodeChannel)
 	// nodes := utils.MapToNodeSlice(nodeMap)

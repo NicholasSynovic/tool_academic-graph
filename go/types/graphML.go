@@ -5,44 +5,42 @@ import "encoding/xml"
 type GraphML struct {
 	XMLName xml.Name `xml:"graphml"`
 	Xmlns   string   `xml:"xmlns,attr"`
-	Graphs  []Graph  `xml:"graph"`
+
+	KEYS   []Key `xml:"key`
+	Graphs Graph `xml:"graph"`
+}
+
+type Key struct {
+	ID             string `xml:"id,attr"`
+	FOR            string `xml:"for,attr"`
+	ATTRIBUTE_NAME string `xml:"attr.name,attr"`
 }
 
 type Graph struct {
-	XMLName     xml.Name `xml:"graph"`
-	ID          string   `xml:"id,attr"`
-	Edgedefault string   `xml:"edgedefault,attr"`
-	Nodes       []Node   `xml:"node"`
-	Edges       []Edge   `xml:"edge"`
+	ID           string `xml:"id,attr"`
+	EDGE_DEFAULT string `xml:"edgedefault,attr"`
+
+	NODES []Node `xml:"node"`
+	EDGES []Edge `xml:"edge"`
 }
 
 type Node struct {
-	XML_NAME xml.Name `xml:"node"`
-	ID       string   `xml:"id,attr"`
+	ID     string `xml:"id,attr"`
+	LABELS string `xml:"labels,attr"`
 
-	LABELS     string `xml:"labels,attr"`
-	LABEL_DATA Data   `xml:"data"`
+	DATA []Data `xml:"data"`
+}
 
-	OAID_DATA Data `xml:"data"`
-	DOI_DATA  Data `xml:"data"`
-	UPDATED   Data `xml:"data"`
+type Edge struct {
+	ID     string `xml:"id,attr"`
+	SOURCE string `xml:"source,attr"`
+	TARGET string `xml:"target,attr"`
+	LABEL  string `xml:"label,attr"`
+
+	DATA []Data `xml:"data"`
 }
 
 type Data struct {
 	KEY string `xml:"key,attr"`
 	VAL string `xml:",chardata"`
-}
-
-type Key struct {
-	ID   string `xml:"id,attr"`
-	For  string `xml:"for,attr"`
-	Attr string `xml:"attr.name,attr"`
-	Type string `xml:"attr.type,attr"`
-}
-
-type Edge struct {
-	XMLName xml.Name `xml:"edge"`
-	ID      string   `xml:"id,attr"`
-	Source  string   `xml:"source,attr"`
-	Target  string   `xml:"target,attr"`
 }
