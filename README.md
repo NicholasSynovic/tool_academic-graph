@@ -13,6 +13,7 @@
   - [How to Run](#how-to-run)
     - [1. Extract Relevant Data From OpenAlex JSON Files](#1-extract-relevant-data-from-openalex-json-files)
     - [2. Create SQLite3 Database](#2-create-sqlite3-database)
+  - [Notes](#notes)
 
 ## About
 
@@ -73,4 +74,13 @@ Options:
   -i, --input PATH   Path to JSON file  [required]
   -o, --output PATH  Path to output database  [required]
   --help             Show this message and exit.
+```
+
+## Notes
+
+Delete a Neo4J database:
+
+```shell
+sudo neo4j stop
+rm -Rf /var/lib/neo4j/data/databases/* /var/lib/neo4j/data/transactions/*
 ```

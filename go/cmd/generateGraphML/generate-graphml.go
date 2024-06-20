@@ -171,5 +171,6 @@ func main() {
 		GRAPH: graph,
 	}
 
+	fmt.Println("Writing data to ", config.OutputXMLFilePath)
 	utils.WriteGraphMLToFile(outputFP, graphML)
 }
