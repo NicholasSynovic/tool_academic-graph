@@ -17,14 +17,20 @@ type Graph struct {
 }
 
 type Node struct {
-	XMLName xml.Name `xml:"node"`
-	ID      string   `xml:"id,attr"`
-	Data    Data     `xml:"data"`
+	XML_NAME xml.Name `xml:"node"`
+	ID       string   `xml:"id,attr"`
+
+	LABELS     string `xml:"labels,attr"`
+	LABEL_DATA Data   `xml:"data"`
+
+	OAID_DATA Data `xml:"data"`
+	DOI_DATA  Data `xml:"data"`
+	UPDATED   Data `xml:"data"`
 }
 
 type Data struct {
-	Key   string `xml:"key,attr"`
-	Value string `xml:",chardata"`
+	KEY string `xml:"key,attr"`
+	VAL string `xml:",chardata"`
 }
 
 type Key struct {
