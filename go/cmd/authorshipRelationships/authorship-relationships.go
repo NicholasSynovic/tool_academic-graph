@@ -37,9 +37,9 @@ func CreateAuthorshipRelationships(inChannel chan types.FileLine) []types.Author
 
 			authorOAID := utils.CleanOAID(rawAuthorOAID)
 
-			cr := types.AuthorshipRelationship{ID: idCounter, AUTHOR_OAID: authorOAID, WORK_OAID: oaid}
+			ar := types.AuthorshipRelationship{ID: idCounter, AUTHOR_OAID: authorOAID, WORK_OAID: oaid}
 
-			data = append(data, cr)
+			data = append(data, ar)
 			idCounter += 1
 		}
 		spinner.Add(1)
