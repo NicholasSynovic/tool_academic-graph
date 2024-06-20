@@ -1,4 +1,4 @@
-module NicholasSynovic/work-objects
+module NicholasSynovic/authors
 
 go 1.22.3
 

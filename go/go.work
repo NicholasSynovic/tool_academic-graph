@@ -1,15 +1,14 @@
 go 1.22.3
 
 use (
-	./cmd
-	./cmd/authorObjects
 	./cmd/authorshipRelationships
 	./cmd/citesRelationships
 	./cmd/fundsRelationships
 	./cmd/generateGraphML
 	./cmd/keywordsRelationships
+	./cmd/nodes/authors
+	./cmd/nodes/works
 	./cmd/workIndex
-	./cmd/workObjects
 	./types
 	./utils
 )
