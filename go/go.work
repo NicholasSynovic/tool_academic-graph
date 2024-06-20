@@ -1,11 +1,11 @@
 go 1.22.3
 
 use (
-	./cmd/authorshipRelationships
-	./cmd/citesRelationships
-	./cmd/fundsRelationships
+	./cmd/edges/authored
+	./cmd/edges/cites
+	./cmd/edges/funds
+	./cmd/edges/keyword
 	./cmd/generateGraphML
-	./cmd/keywordsRelationships
 	./cmd/nodes/authors
 	./cmd/nodes/works
 	./cmd/workIndex

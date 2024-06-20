@@ -1,4 +1,4 @@
-module NicholasSynovic/keywords-relationships
+module NicholasSynovic/funds
 
 go 1.22.3
 

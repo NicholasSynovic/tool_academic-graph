@@ -1,4 +1,4 @@
-module NicholasSynovic/cites-relationships
+module NicholasSynovic/authored
 
 go 1.22.3
 
