@@ -19,7 +19,6 @@ type WorkObject struct {
 	DISTINCT_COUNTRY_COUNT int `json:"distinct_country_count"`
 
 	// Categories
-	CONCEPT_COUNT int    `json:"concept_count"`
 	KEYWORD_COUNT int    `json:"keyword_count"`
 	GRANT_COUNT   int    `json:"grant_count"`
 	TOPIC_COUNT   int    `json:"topic_count"`

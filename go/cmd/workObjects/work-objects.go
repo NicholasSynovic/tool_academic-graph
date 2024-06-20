@@ -57,8 +57,6 @@ func CreateWorkObjects(inChannel chan types.FileLine) []types.WorkObject {
 
 		// ===Categories===
 
-		conceptsCount := len(jsonObj["concepts"].([]interface{}))
-
 		keywordCount := len(jsonObj["keywords"].([]interface{}))
 
 		grantCount := len(jsonObj["grants"].([]interface{}))
@@ -111,7 +109,6 @@ func CreateWorkObjects(inChannel chan types.FileLine) []types.WorkObject {
 			DISTINCT_COUNTRY_COUNT: int(distinctCountryCount),
 
 			// Categories
-			CONCEPT_COUNT: conceptsCount,
 			KEYWORD_COUNT: keywordCount,
 			GRANT_COUNT:   grantCount,
 			IS_PARATEXT:   isParatext,
