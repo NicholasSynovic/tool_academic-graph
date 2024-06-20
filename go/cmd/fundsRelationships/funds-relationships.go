@@ -10,12 +10,12 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
-func CreateCitesRelationships(inChannel chan types.FileLine) []types.CitesRelationship {
-	data := []types.CitesRelationship{}
+func CreateFundsRelationships(inChannel chan types.FileLine) []types.FundsRelationship {
+	data := []types.FundsRelationship{}
 
 	idCounter := 0
 
-	spinner := progressbar.Default(-1, "Creating types.CitesRelationship...")
+	spinner := progressbar.Default(-1, "Creating types.FundsRelationship...")
 
 	for fl := range inChannel {
 		var jsonObj map[string]any
@@ -28,15 +28,17 @@ func CreateCitesRelationships(inChannel chan types.FileLine) []types.CitesRelati
 		rawOAID, _ := jsonObj["id"].(string)
 		oaid := utils.CleanOAID(rawOAID)
 
-		citedWorks := jsonObj["referenced_works"].([]interface{})
+		grants := jsonObj["grants"].([]interface{})
 
-		for idx := range citedWorks {
-			rawReferenceOAID := citedWorks[idx].(string)
-			referenceOAID := utils.CleanOAID(rawReferenceOAID)
+		for idx := range grants {
+			grantObject := grants[idx].(map[string]any)
+			rawFunderOAID := grantObject["funder"].(string)
 
-			cr := types.CitesRelationship{ID: idCounter, Work_OAID: oaid, Ref_OAID: referenceOAID}
+			funderOAID := utils.CleanOAID(rawFunderOAID)
 
-			data = append(data, cr)
+			fr := types.FundsRelationship{ID: idCounter, FUNDER_OAID: funderOAID, WORK_OAID: oaid}
+
+			data = append(data, fr)
 			idCounter += 1
 		}
 		spinner.Add(1)
@@ -44,7 +46,7 @@ func CreateCitesRelationships(inChannel chan types.FileLine) []types.CitesRelati
 	return data
 }
 
-func WriteCitesRelationshipsToFile(fp *os.File, data []types.CitesRelationship) {
+func WriteFundsRelationshipsToFile(fp *os.File, data []types.FundsRelationship) {
 	bar := progressbar.Default(int64(len(data)), "Writing to file...")
 
 	for _, record := range data {
@@ -84,8 +86,8 @@ func main() {
 
 	go utils.ReadLines(fps, flChan)
 
-	cr := CreateCitesRelationships(flChan)
+	cr := CreateFundsRelationships(flChan)
 
-	WriteCitesRelationshipsToFile(outputFP, cr)
+	WriteFundsRelationshipsToFile(outputFP, cr)
 
 }
